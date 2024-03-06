@@ -12,8 +12,6 @@
 	<Heading tag="h3" class="text-2xl">{title}</Heading>
 	<p>{subtitle}</p>
 	<Chart options={chartOptions}></Chart>
-	<hr />
-	<LastRange />
 </Card>
 
 <!--

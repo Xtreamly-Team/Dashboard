@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Card, type LinkType } from 'flowbite-svelte';
 	import {
-		DiscordSolid,
+		// DiscordSolid,
 		DribbbleSolid,
 		FacebookSolid,
 		GithubSolid,
@@ -11,19 +11,20 @@
 	import type { ComponentType } from 'svelte';
 
 	const links: LinkType[] = [
-		{ name: 'Terms and conditions', href: '#' },
+		{ name: 'Docs', href: 'https://info.xtreamly.io' },
+		{ name: 'Metamask-Snap', href: 'https://snap.xtreamly.io' },
 		// { name: 'Privacy Policy', href: '#' },
 		// { name: 'Licensing', href: '#' },
 		// { name: 'Cookie Policy', href: '#' },
-		{ name: 'Contact', href: '#' }
+		// { name: 'Contact', href: '#' }
 	];
 
 	const brands: [ComponentType, string][] = [
 		// [FacebookSolid, ''],
-		[MailBoxSolid, ''],
-		[GithubSolid, ''],
+		[MailBoxSolid, 'mailto:info@xtreamly.io'],
+		[GithubSolid, 'https://github.com/Xtreamly-Team'],
 		// [DribbbleSolid, ''],
-		[DiscordSolid, '']
+		// [DiscordSolid, '']
 	];
 </script>
 
