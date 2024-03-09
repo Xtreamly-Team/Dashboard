@@ -1,6 +1,6 @@
 import { AggergatedSlippageAmount, SwapTransaction } from "./models/models";
 
-const SERVER_HOST = 'https://test.xtreamly.io:5001';
+const SERVER_HOST = 'https://test.xtreamly.io:5000';
 const API_URL = `${SERVER_HOST}/api/v1`;
 
 export async function getSwapTransactions(from: number = 0, to: number = 0, limit: number = 10): Promise<SwapTransaction[]> {
