@@ -21,8 +21,6 @@
     } from "$lib/utils";
     import { SimpleDataPoint, fatbars } from "$lib/charts";
 
-    // chartOptions.series = data.series;
-
     let swapTransactions: SwapTransaction[] = [];
 
     const slippageIntervalDays = 7;

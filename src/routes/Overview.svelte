@@ -5,7 +5,9 @@
 </script>
 
 <div
-    class="w-full flex flex-wrap lg:flex-nowrap rounded-lg bg-primary-400 dark:bg-pink-600 p-4"
+    class="w-full flex flex-wrap lg:flex-nowrap rounded-lg bg-white dark:bg-gray-600 p-4
+border border-gray-200 dark:border-gray-600
+    "
 >
     <div class="flex flex-col lg:min-w-96 w-96 m-4">
         <div class="font-thin text-lg">Total value locked</div>

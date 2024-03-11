@@ -140,45 +140,41 @@ export class SimpleDataPoint {
     ) { }
 }
 
-export type DataPoint = ApexAxisChartSeries | ApexNonAxisChartSeries;
+export type DataSeries = ApexAxisChartSeries | ApexNonAxisChartSeries;
 
-export function lineChart (dataPoints: DataPoint = [], dark = false) {
+export function lineChart(dataPoints: DataSeries = [], dark = false) {
     let mainChartColors;
-    
-	if (dark) {
-		mainChartColors = {
-			borderColor: '#374151',
-			labelColor: '#9CA3AF',
-			opacityFrom: 0,
-			opacityTo: 0.15,
-		};
-	} else {
-		mainChartColors = {
-			borderColor: '#F3F4F6',
-			labelColor: '#6B7280',
-			opacityFrom: 0.45,
-			opacityTo: 0,
-		}
-	}
+
+    if (dark) {
+        mainChartColors = {
+            backgroundColor: '#000000',
+            borderColor: '#374151',
+            labelColor: '#9CA3AF',
+            opacityFrom: 0,
+            opacityTo: 0.15,
+        };
+    } else {
+        mainChartColors = {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#F3F4F6',
+            labelColor: '#6B7280',
+            opacityFrom: 0.45,
+            opacityTo: 0,
+        }
+    }
 
     const chartOptionsBuilder = new ChartOptionsBuilder()
 
+    chartOptionsBuilder.setSeries(dataPoints)
+
     chartOptionsBuilder.setOverallOptions({
         height: 420,
-        type: 'area',
+        type: 'line',
         fontFamily: 'Inter, sans-serif',
-        foreColor: mainChartColors.labelColor,
+        // background: mainChartColors.backgroundColor,
+        // foreColor: mainChartColors.labelColor,
         toolbar: {
-            show: false
-        }
-    })
-
-    chartOptionsBuilder.setFill({
-        type: 'gradient',
-        gradient: {
-            // enabled: true,
-            opacityFrom: mainChartColors.opacityFrom,
-            opacityTo: mainChartColors.opacityTo
+            show: true
         }
     })
 
@@ -203,10 +199,14 @@ export function lineChart (dataPoints: DataPoint = [], dark = false) {
         }
     })
 
-    chartOptionsBuilder.setSeries(dataPoints)
+    chartOptionsBuilder.setStroke({
+        curve: 'smooth',
+        width: 2,
+        // colors: ['#000'],
+    })
 
     chartOptionsBuilder.setMarkers({
-        size: 5,
+        size: 0,
         strokeColors: '#ffffff',
         hover: {
             size: undefined,
@@ -215,11 +215,16 @@ export function lineChart (dataPoints: DataPoint = [], dark = false) {
     })
 
     chartOptionsBuilder.setXaxis({
-        categories: ['01 Feb', '02 Feb', '03 Feb', '04 Feb', '05 Feb', '06 Feb', '07 Feb'],
+        // categories: ['01 Feb', '02 Feb', '03 Feb', '04 Feb', '05 Feb', '06 Feb', '07 Feb'],
+        type: 'datetime',
+        // type: 'category',
+        
+        offsetX: -15,
         labels: {
+            trim: true,
             style: {
                 colors: [mainChartColors.labelColor],
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: 500
             }
         },
@@ -237,6 +242,9 @@ export function lineChart (dataPoints: DataPoint = [], dark = false) {
                 width: 1,
                 dashArray: 10
             }
+        },
+        tooltip: {
+            enabled: false
         }
     })
 
@@ -247,9 +255,9 @@ export function lineChart (dataPoints: DataPoint = [], dark = false) {
                 fontSize: '14px',
                 fontWeight: 500
             },
-            formatter: function (value) {
-                return '$' + value;
-            }
+            // formatter: function (value) {
+            //     return '$' + value;
+            // }
         }
     })
 
@@ -278,7 +286,7 @@ export function lineChart (dataPoints: DataPoint = [], dark = false) {
         }
     ])
 
-    return chartOptionsBuilder.build()
+    return chartOptionsBuilder
 
 }
 
