@@ -1,4 +1,6 @@
 <script lang="ts">
+    import DataCard from "$lib/components/DataCard.svelte";
+
     // TODO: Add gas fee to table
     import FactColumn from "$lib/components/dashboard/FactColumn.svelte";
     import FactColumnItem from "$lib/components/dashboard/FactColumnItem.svelte";
@@ -42,20 +44,17 @@
 
 </script>
 
-<div
-    class="w-full flex flex-wrap lg:flex-nowrap rounded-lg bg-white dark:bg-gray-600 p-4
-border border-gray-200 dark:border-gray-600
-    "
->
+<DataCard title='Aggregate Data'>
+    <div class="w-full flex flex-wrap lg:flex-nowrap">
     <FactColumn title="Total value locked (Weekly Average)" value="$135.395b">
         <FactColumnItem title="Number of Swaps" value="54412" />
         <FactColumnItem title="Total Volume (Last 24 Hours):" value="$144.618b" />
         <FactColumnItem title="Total Value Locked (Yesterday)" value="$144.618b" />
     </FactColumn>
-    <div class="w-8" />
-    <div class="w-full">
-        <div class="flex flex-col">
+        <div class="w-8" />
+        <div class="w-full p-8">
+            <div class="flex flex-col">
             <TemporalChart dataSeries={lpInfoSeries} />
         </div>
     </div>
-</div>
+</DataCard>

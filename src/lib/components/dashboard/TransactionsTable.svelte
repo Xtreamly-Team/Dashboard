@@ -25,6 +25,7 @@
     } from "flowbite-svelte-icons";
     import StatusBadge from "./StatusBadge.svelte";
     import CreditCard from "./CreditCard.svelte";
+    import DataCard from "../DataCard.svelte";
 
     export let shownNumber = 10;
 
@@ -39,40 +40,7 @@
         swapTransactions.length > 0 ? swapTransactions[0].blockNumber : 0;
 </script>
 
-<Card size="xl" class="h-fit max-w-none">
-    <div
-        class="items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex"
-    >
-        <div class="mb-4 w-full sm:mb-0">
-            <h3 class="text-base font-normal text-gray-500 dark:text-gray-400">
-                {`Last block: ${lastBlockNumber}`}
-            </h3>
-            <span
-                class="text-2xl font-bold leading-none text-gray-900 dark:text-white sm:text-3xl"
-                >Swap Transactions</span
-            >
-        </div>
-        <div class="w-full max-w-lg">
-            <div class="grid grid-cols-3 items-center gap-4">
-                <!-- <Button color="alternative" class="whitespace-nowrap"> -->
-                <!-- 	Filter by <span class="hidden sm:inline">status</span> -->
-                <!-- 	<ChevronDownOutline size="xs" class="ms-2" /> -->
-                <!-- </Button> -->
-                <!-- <Dropdown class="w-44 space-y-3 p-3 text-sm" placement="bottom-start"> -->
-                <!-- 	<li><Checkbox class="accent-primary-600">Completed (56)</Checkbox></li> -->
-                <!-- 	<li><Checkbox checked>Cancelled (56)</Checkbox></li> -->
-                <!-- 	<li><Checkbox class="accent-primary-600">In progress (56)</Checkbox></li> -->
-                <!-- 	<li><Checkbox checked>In review (97)</Checkbox></li> -->
-                <!-- </Dropdown> -->
-                <!-- <Input placeholder="From"> -->
-                <!-- 	<CalendarMonthOutline slot="left" size="sm" /> -->
-                <!-- </Input> -->
-                <!-- <Input placeholder="To"> -->
-                <!-- 	<CalendarMonthOutline slot="left" size="sm" /> -->
-                <!-- </Input> -->
-            </div>
-        </div>
-    </div>
+<DataCard title="Transactions" topTitle={`Last block: ${lastBlockNumber}`}>
     <Table
         hoverable={true}
         noborder
@@ -145,11 +113,5 @@
     </Table>
     <div class="flex items-center justify-between pt-3 sm:pt-6">
         <LastRange bind:shownNumber />
-        <!-- <a -->
-        <!-- 	href="#top" -->
-        <!-- 	class="inline-flex items-center rounded-lg p-2 text-xs font-medium uppercase text-primary-700 hover:bg-gray-100 dark:text-primary-500 dark:hover:bg-gray-700 sm:text-sm" -->
-        <!-- > -->
-        <!-- 	Transactions report <ChevronRightOutline size="sm" class="ms-2" /> -->
-        <!-- </a> -->
     </div>
-</Card>
+</DataCard>

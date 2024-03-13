@@ -7,10 +7,16 @@
     import { onMount } from "svelte";
     import TransactionCard from "./TransactionCard.svelte";
     import type { SwapTransaction } from "$lib/models/models";
-    import { getPreviousDaysStart, getPreviousWeeksStart, truncateNumber } from "$lib/utils";
+    import {
+        getPreviousDaysStart,
+        getPreviousWeeksStart,
+        truncateNumber,
+    } from "$lib/utils";
     import { getSwapTransactions } from "$lib/api";
     import TransactionsTable from "$lib/components/dashboard/TransactionsTable.svelte";
     import type { SimpleDataPoint } from "$lib/charts";
+    import { Card } from "flowbite-svelte";
+    import DataCard from "$lib/components/DataCard.svelte";
 
     let tvlData = [
         // {x: 'apple', y: 10},
@@ -71,7 +77,7 @@
 
     let volumeSeries = {
         name: "Volume",
-        type: "line",
+        type: "area",
         data: volumeData,
     };
 
@@ -108,49 +114,68 @@
         // impermanentLossSeries,
     ];
 
+    let overviewFillOptions = {
+        type: ["solid", "solid", "solid", "gradient"],
+        // type: 'gradient',
+        gradient: {
+            shadeIntensity: 0.5,
+            type: "vertical",
+            shade: "dark",
+            // inverseColors: false,
+            opacityFrom: 0.55,
+            opacityTo: 0.35,
+            // stops: [0, 100]
+        },
+    };
 
     let swapTransactions: SwapTransaction[] = [];
 
     const slippageIntervalDays = 7;
     const slippageIntervalWeeks = 2;
 
-
-    function priceImpactData(swapTransactions: SwapTransaction[]) {
+    function priceImpactChartData(swapTransactions: SwapTransaction[]) {
         let ethData = [];
         let usdtData = [];
         let usdcData = [];
         for (let swap of swapTransactions) {
-            if (swap.tokenInSymbol === 'WETH') {
-                ethData.push({ x: swap.amountIn, y: swap.priceImpact });
-            } else if (swap.tokenInSymbol === 'USDT') {
-                usdtData.push({ x: swap.amountIn, y: swap.priceImpact });
-            } else if (swap.tokenInSymbol === 'USDC') {
-                usdcData.push({ x: swap.amountIn, y: swap.priceImpact });
+            if (swap.tokenInSymbol === "WETH") {
+                ethData.push({
+                    x: swap.amountIn,
+                    y: +truncateNumber(swap.priceImpactPercentage),
+                });
+            } else if (swap.tokenInSymbol === "USDT") {
+                usdtData.push({
+                    x: swap.amountIn,
+                    y: +truncateNumber(swap.priceImpactPercentage),
+                });
+            } else if (swap.tokenInSymbol === "USDC") {
+                usdcData.push({
+                    x: swap.amountIn,
+                    y: +truncateNumber(swap.priceImpactPercentage),
+                });
             }
         }
         let dataSeries = [
+            // {
+            //     name: "ETH",
+            //     type: "scatter",
+            //     data: ethData,
+            // },
             {
-            name: 'ETH',
-            type: 'scatter',
-            data: ethData,
-        },
+                name: "USDT",
+                type: "scatter",
+                data: usdtData,
+            },
             {
-            name: 'USDT',
-            type: 'scatter',
-            data: usdtData
-        },
-            {
-            name: 'USDC',
-            type: 'scatter',
-            data: usdcData
-        },
-        ]
-        console.log(dataSeries);
-        return dataSeries
+                name: "USDC",
+                type: "scatter",
+                data: usdcData,
+            },
+        ];
+        return dataSeries;
     }
 
-
-    let priceImpactSeries = undefined;
+    let priceImpactSeries: ApexAxisChartSeries | undefined = undefined;
 
     // let priceImpactSeries = [
     //     {
@@ -168,7 +193,6 @@
     //     },
     // ];
 
-
     onMount(async () => {
         const dayIntervals = getPreviousDaysStart(slippageIntervalDays);
         console.log(dayIntervals);
@@ -183,32 +207,43 @@
             currentTime,
             1000,
         );
-        priceImpactSeries = priceImpactData(swapTransactions);
-
+        priceImpactSeries = priceImpactChartData(swapTransactions);
     });
 </script>
 
-<div
-    class="w-full flex flex-wrap lg:flex-nowrap rounded-lg bg-white dark:bg-gray-600 p-4
-border border-gray-200 dark:border-gray-600
-    "
->
-    <FactColumn title="Number of swaps" value="24512">
-        <FactColumnItem title="TVL (Last 24 hours)" value="$144.618b" />
-        <FactColumnItem title="Total Volume (Last 24 hours)" value="$144.618b" />
-        <FactColumnItem title="Total Positive Slippage (Last 24 hours)" value="$122.618b" />
-        <FactColumnItem title="Total Negative Slippage (Last 24 hours)" value="$144.618b" />
-    </FactColumn>
-    <div class="w-8" />
-    <div class="w-full">
-        <div class="flex flex-col">
-            <TemporalChart dataSeries={overviewSeries} />
-            {#if priceImpactSeries != undefined}
-                <XyChart dataSeries={priceImpactSeries} xaxisTitle="Amount In" yaxisTitle="Price Impact"/>
-                
-            {/if}
+<DataCard title='Aggregate Data'>
+    <div class="w-full flex flex-wrap lg:flex-nowrap">
+        <FactColumn title="Number of swaps (Last 24 hours)" value="24512">
+            <FactColumnItem title="TVL (Last 24 hours)" value="$144.618b" />
+            <FactColumnItem
+                title="Total Volume (Last 24 hours)"
+                value="$144.618b"
+            />
+            <FactColumnItem
+                title="Total Positive Slippage (Last 24 hours)"
+                value="$122.618b"
+            />
+            <FactColumnItem
+                title="Total Negative Slippage (Last 24 hours)"
+                value="$144.618b"
+            />
+        </FactColumn>
+        <div class="w-8" />
+        <div class="w-full p-8">
+            <div class="flex flex-col">
+                <TemporalChart
+                    dataSeries={overviewSeries}
+                    fillOptions={overviewFillOptions}
+                />
+                {#if priceImpactSeries != undefined}
+                    <XyChart
+                        dataSeries={priceImpactSeries}
+                        xaxisTitle="Amount In"
+                        yaxisTitle="Price Impact"
+                    />
+                {/if}
+            </div>
         </div>
     </div>
-</div>
-<!-- <TransactionCard /> -->
+</DataCard>
 <TransactionsTable {swapTransactions} />

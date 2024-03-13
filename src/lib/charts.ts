@@ -152,14 +152,16 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
             labelColor: '#9CA3AF',
             opacityFrom: 0,
             opacityTo: 0.15,
+            // opacityFrom: 0.55,
+            // opacityTo: 0.35,
         };
     } else {
         mainChartColors = {
             backgroundColor: '#FFFFFF',
             borderColor: '#F3F4F6',
             labelColor: '#6B7280',
-            opacityFrom: 0.45,
-            opacityTo: 0,
+            opacityFrom: 0.55,
+            opacityTo: 0.35,
         }
     }
 
@@ -205,6 +207,7 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
         // colors: ['#000'],
     })
 
+
     chartOptionsBuilder.setMarkers({
         size: 0,
         strokeColors: '#ffffff',
@@ -223,7 +226,7 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
         labels: {
             trim: true,
             style: {
-                colors: [mainChartColors.labelColor],
+                colors: mainChartColors.labelColor,
                 fontSize: '12px',
                 fontWeight: 500
             }
@@ -251,8 +254,8 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
     chartOptionsBuilder.setYaxis({
         labels: {
             style: {
-                colors: [mainChartColors.labelColor],
-                fontSize: '14px',
+                colors: mainChartColors.labelColor,
+                fontSize: '12px',
                 fontWeight: 500
             },
             // formatter: function (value) {

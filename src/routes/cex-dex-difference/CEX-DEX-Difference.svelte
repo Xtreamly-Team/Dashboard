@@ -1,4 +1,6 @@
 <script lang="ts">
+    import DataCard from "$lib/components/DataCard.svelte";
+
     // TODO: Add gas fee to table
     import FactColumn from "$lib/components/dashboard/FactColumn.svelte";
     import FactColumnItem from "$lib/components/dashboard/FactColumnItem.svelte";
@@ -49,19 +51,17 @@
 
 </script>
 
-<div
-    class="w-full flex flex-wrap lg:flex-nowrap rounded-lg bg-white dark:bg-gray-600 p-4
-border border-gray-200 dark:border-gray-600
-    "
->
+<DataCard title='Aggregate Data'>
+    <div class="w-full flex flex-wrap lg:flex-nowrap">
     <FactColumn title="Average Difference" value="1.05%">
         <FactColumnItem title="ETH (Uniswap)" value="4046" />
         <FactColumnItem title="ETH (Binance)" value="4047.5" />
     </FactColumn>
-    <div class="w-8" />
-    <div class="w-full">
-        <div class="flex flex-col">
+        <div class="w-8" />
+        <div class="w-full p-8">
+            <div class="flex flex-col">
             <TemporalChart dataSeries={DEXCEXSeries} />
         </div>
     </div>
-</div>
+</DataCard>
+
