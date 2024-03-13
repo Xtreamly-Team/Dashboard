@@ -200,7 +200,7 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
     })
 
     chartOptionsBuilder.setStroke({
-        curve: 'smooth',
+        curve: 'straight',
         width: 2,
         // colors: ['#000'],
     })

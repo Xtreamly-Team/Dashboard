@@ -48,3 +48,4 @@ export async function getSlippageAmountForIntervals(intervals: number[]): Promis
 
     return intervalAggregates;
 }
+

@@ -32,8 +32,8 @@
 	tag="footer"
 	size="none"
 	horizontal
-	class="my-4 w-auto gap-2 sm:gap-4 md:max-w-none md:items-center md:justify-between {$$props.class ??
-		''}"
+	class="w-auto gap-2 sm:gap-4 md:max-w-none md:items-center md:justify-between {$$props.class ??
+		''} shadow-none"
 >
 	<ul class="flex flex-wrap items-center gap-2 sm:gap-4 md:mb-0">
 		{#each links as { name, href }}

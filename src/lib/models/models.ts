@@ -9,10 +9,12 @@ export class SwapTransaction {
         public tokenOutSymbol: string,
         public amountIn: number,
         public quotedPrice: number,
+        public priceImpact: number,
         public priceImpactPercentage: number,
         public quotedAmountOut: number,
         public executedAmountOut: number,
         public poolFee: number,
+        public gasFee: number,
     ) { }
 
     get executedPrice() {
@@ -42,10 +44,12 @@ export class SwapTransaction {
                 swap['tokenOutSymbol'],
                 swap['amountIn'],
                 swap['quotedPrice'],
+                swap['priceImpact'],
                 swap['priceImpactPercentage'],
                 swap['quotedAmountOut'],
                 swap['executedAmountOut'],
                 swap['poolFee'],
+                swap['gasPrice'],
             ))
         })
         return swapTransactions;
@@ -62,20 +66,27 @@ export class SwapTransactionTableModel {
         public amountIn: number,
         public quotedPrice: number,
         public executedPrice: number,
+        public gasFee: number,
         public slippage: number,
         public slippagePercentage: number,
         public priceImpact: number,
     ) { }
 
+    get amountOut() {
+        return this.amountIn * this.executedPrice;
+    }
+
     static headers() {
         return [
             'Hash',
             'Block',
-            'In',
-            'Out',
+            // 'In',
+            // 'Out',
             'Amount In',
+            'Amount Out',
             'Quoted Price',
             'Executed Price',
+            'Gas Fee',
             'Slippage (USD)',
             'Slippage (%)',
             'Price Impact (%)',
@@ -92,6 +103,7 @@ export class SwapTransactionTableModel {
             swapTransaction.amountIn,
             swapTransaction.quotedPrice,
             swapTransaction.executedPrice,
+            swapTransaction.gasFee,
             swapTransaction.slippageAmount,
             swapTransaction.slippagePercentage,
             swapTransaction.priceImpactPercentage,
