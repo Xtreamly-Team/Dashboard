@@ -6,13 +6,27 @@
     import XyChart from "$lib/components/dashboard/XYChart.svelte";
     import { onMount } from "svelte";
     import TransactionCard from "./TransactionCard.svelte";
-    import type { SwapTransaction } from "$lib/models/models";
     import {
+    TokenPair,
+        type SwapTransaction,
+        type TokenVolume,
+        type TokenVolumesSnapshot,
+        type LPInfo,
+        LPSnapshot,
+        AggergatedSlippageAmount,
+    } from "$lib/models/models";
+    import {
+    getBlockIntervals,
+        getIntervalDates,
+        getLatestBlock,
         getPreviousDaysStart,
         getPreviousWeeksStart,
+        getSupportedTokens,
+        StableCoins,
+        timestampToDate,
         truncateNumber,
     } from "$lib/utils";
-    import { getSwapTransactions } from "$lib/api";
+    import { getBlockForTimestamp, getLPInfosForBlockNumbers, getLPInfosForIntervals, getPoolsForTokenPair, getSlippageAmountForIntervals, getSwapTransactions, getVolatilityForIntervals, getVolumeForAllTokens } from "$lib/api";
     import TransactionsTable from "$lib/components/dashboard/TransactionsTable.svelte";
     import type { SimpleDataPoint } from "$lib/charts";
     import { Card } from "flowbite-svelte";
@@ -110,36 +124,6 @@
         data: negativeSlippageData,
     };
 
-    let volumeData = [
-        { x: "05/06/2014", y: 100 },
-        { x: "05/07/2014", y: 89 },
-        { x: "05/08/2014", y: 79 },
-        { x: "05/09/2014", y: 94 },
-        { x: "05/10/2014", y: 99 },
-        { x: "05/11/2014", y: 102 },
-        { x: "05/12/2014", y: 95 },
-        { x: "05/13/2014", y: 82 },
-        { x: "05/14/2014", y: 8 },
-        { x: "05/15/2014", y: 149 },
-        { x: "05/16/2014", y: 95 },
-        { x: "05/17/2014", y: 99 },
-        { x: "05/18/2014", y: 85 },
-        { x: "05/19/2014", y: 59 },
-        { x: "05/20/2014", y: 84 },
-        { x: "05/21/2014", y: 82 },
-        { x: "05/22/2014", y: 69 },
-        { x: "05/23/2014", y: 6 },
-        { x: "05/24/2014", y: 71 },
-        { x: "05/25/2014", y: 91 },
-        { x: "05/26/2014", y: 95 },
-    ];
-
-    let volumeSeries = {
-        name: "Volume",
-        type: "bar",
-        data: volumeData,
-    };
-
     let volatilityData = [
         { x: "05/06/2014", y: 33 },
         { x: "05/14/2014", y: 45 },
@@ -164,14 +148,7 @@
     };
 
     // TODO: Maybe add annotations
-    let overviewSeries = [
-        tvlSeries,
-        positiveSlippageSeries,
-        negativeSlippageSeries,
-        volumeSeries,
-        // volatilitySeries,
-        // impermanentLossSeries,
-    ];
+    let overviewSeries: ApexAxisChartSeries | undefined = undefined;
 
     let overviewFillOptions = {
         type: ["gradient", "solid", "solid", "solid"],
@@ -188,9 +165,6 @@
     };
 
     let swapTransactions: SwapTransaction[] = [];
-
-    const slippageIntervalDays = 7;
-    const slippageIntervalWeeks = 2;
 
     function priceImpactChartData(swapTransactions: SwapTransaction[]) {
         let ethData = [];
@@ -236,41 +210,169 @@
 
     let priceImpactSeries: ApexAxisChartSeries | undefined = undefined;
 
-    // let priceImpactSeries = [
-    //     {
-    //         name: "Price Impact",
-    //         type: "scatter",
-    //         data: [
-    //             { x: 20, y: 100 },
-    //             { x: 10, y: 101 },
-    //             { x: 15, y: 102 },
-    //             { x: 22, y: 105 },
-    //             { x: 31, y: 99 },
-    //             { x: 12, y: 102 },
-    //             { x: 14, y: 95 },
-    //         ],
-    //     },
-    // ];
+    let volumeData = [
+        { x: "05/06/2014", y: 100 },
+        { x: "05/07/2014", y: 89 },
+        { x: "05/08/2014", y: 79 },
+        { x: "05/09/2014", y: 94 },
+        { x: "05/10/2014", y: 99 },
+        { x: "05/11/2014", y: 102 },
+        { x: "05/12/2014", y: 95 },
+        { x: "05/13/2014", y: 82 },
+        { x: "05/14/2014", y: 8 },
+        { x: "05/15/2014", y: 149 },
+        { x: "05/16/2014", y: 95 },
+        { x: "05/17/2014", y: 99 },
+        { x: "05/18/2014", y: 85 },
+        { x: "05/19/2014", y: 59 },
+        { x: "05/20/2014", y: 84 },
+        { x: "05/21/2014", y: 82 },
+        { x: "05/22/2014", y: 69 },
+        { x: "05/23/2014", y: 6 },
+        { x: "05/24/2014", y: 71 },
+        { x: "05/25/2014", y: 91 },
+        { x: "05/26/2014", y: 95 },
+    ];
+
+    function getTokenVolumeSeries(volumeSnapshots: TokenVolumesSnapshot[]) {
+
+        const volumeData = volumeSnapshots.map((snapshot) => {
+            return {
+                x: timestampToDate(snapshot.timestamp).toDateString(),
+                y: truncateNumber(snapshot.tokenVolumes.reduce((acc, tokenVolume) => {
+                    if (StableCoins.includes(tokenVolume.tokenSymbol.toUpperCase())) {
+                        return acc + tokenVolume.totalVolume;
+                    } else {
+                        return acc;
+                    }
+                }, 0), 0),
+            };
+        });
+
+        let volumeSeries = {
+            name: "Volume",
+            type: "bar",
+            data: volumeData,
+        };
+
+        return volumeSeries;
+    }
+
+    function getTVLSeries(lpSnapshots: LPSnapshot[]) {
+
+        // const tvlData = lpSnapshots.map((snapshot) => {
+        //     return {
+        //         x: timestampToDate(snapshot.info.).toDateString(),
+        //         y: truncateNumber(snapshot.tokenVolumes.reduce((acc, tokenVolume) => {
+        //             if (StableCoins.includes(tokenVolume.tokenSymbol.toUpperCase())) {
+        //                 return acc + tokenVolume.totalVolume;
+        //             } else {
+        //                 return acc;
+        //             }
+        //         }, 0), 0),
+        //     };
+        // });
+        //
+        // let volumeSeries = {
+        //     name: "Volume",
+        //     type: "bar",
+        //     data: tvlData,
+        // };
+        //
+        // return volumeSeries;
+    }
 
     onMount(async () => {
-        const dayIntervals = getPreviousDaysStart(slippageIntervalDays);
-        console.log(dayIntervals);
-        const weekIntervals = getPreviousWeeksStart(slippageIntervalWeeks);
-        console.log(weekIntervals);
-        const currentDayStart = dayIntervals[0];
+        const [WETH, USDT, USDC, DAI] = getSupportedTokens()
+
+        const pastWeekIntervals = getPreviousDaysStart(7);
+        const pastWeekBlockIntervals = await getBlockIntervals(pastWeekIntervals);
+        const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals);
+
+
+        const pastMonthIntervals = getPreviousDaysStart(3);
+        const pastMonthblockIntervals = await getBlockIntervals(pastMonthIntervals);
+        const pastMonthIntervalDays = getIntervalDates(pastMonthIntervals);
+
+
+        console.log(pastMonthIntervals);
+
+
+        const tokenVolumes = []
+
+        const lps = await getPoolsForTokenPair(new TokenPair(WETH, USDT))
+
+        console.log(lps)
+
+
+        console.log(pastMonthblockIntervals)
+
+        // const lpInfos = await getLPInfosForBlockNumbers(lps[1], blockIntervals.slice(0, 1))
+        //
+        // console.log(lpInfos)
+
+        // const volumeSeries = getTokenVolumeSeries(tokenVolumes);
+        //
+        // console.log(tokenVolumes);
+        //
+        // const weekIntervals = getPreviousWeeksStart(slippageIntervalWeeks);
+
+
+        const aggregatedSlippageAmount = await getSlippageAmountForIntervals(pastMonthIntervals)
+
+        const positiveSlippageData = aggregatedSlippageAmount.map((slippageAmount: AggergatedSlippageAmount) => {
+            return {
+                x: timestampToDate(slippageAmount.timestamp).toDateString(),
+                y: slippageAmount.positiveSlippage
+            };
+        });
+
+        const negativeSlippageData = aggregatedSlippageAmount.map((slippageAmount: AggergatedSlippageAmount) => {
+            return {
+                x: timestampToDate(slippageAmount.timestamp).toDateString(),
+                y: slippageAmount.negativeSlippage
+            };
+        });
+
+        const positiveSlippageSeries = {
+            name: "Positive Slippage",
+            type: "line",
+            data: positiveSlippageData,
+        };
+
+        const negativeSlippageSeries = {
+            name: "Negative Slippage",
+            type: "line",
+            data: negativeSlippageData,
+        };
+
+
+
+        overviewSeries = [
+            // tvlSeries,
+            // positiveSlippageSeries,
+            // negativeSlippageSeries,
+            // volumeSeries,
+            // volatilitySeries,
+            // impermanentLossSeries,
+        ];
+
+
+        const currentDayStart = pastWeekIntervals[0];
+
         const currentTime = Math.floor(new Date().valueOf() / 1000);
-        console.log(currentDayStart, currentTime);
 
         swapTransactions = await getSwapTransactions(
             currentDayStart,
             currentTime,
             1000,
         );
+
         priceImpactSeries = priceImpactChartData(swapTransactions);
     });
 </script>
 
-<DataCard title='Aggregate Data'>
+<DataCard title="Aggregate Data">
     <div class="w-full flex flex-wrap lg:flex-nowrap">
         <FactColumn title="Number of swaps (Last 24 hours)" value="24512">
             <FactColumnItem title="TVL (Last 24 hours)" value="$144.618b" />
@@ -290,10 +392,12 @@
         <div class="w-8" />
         <div class="w-full p-8">
             <div class="flex flex-col">
-                <TemporalChart
-                    dataSeries={overviewSeries}
-                    fillOptions={overviewFillOptions}
-                />
+                {#if overviewSeries != undefined}
+                    <TemporalChart
+                        dataSeries={overviewSeries}
+                        fillOptions={overviewFillOptions}
+                    />
+                {/if}
                 {#if priceImpactSeries != undefined}
                     <XyChart
                         dataSeries={priceImpactSeries}

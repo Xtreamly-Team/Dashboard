@@ -7,7 +7,6 @@
     import { Chart } from "flowbite-svelte";
     import { onMount } from "svelte";
 
-    let lineChartBuilder: ChartOptionsBuilder;
 
     export let dataSeries: DataSeries;
     export let legendOptions: ApexLegend | undefined = undefined;
@@ -25,8 +24,6 @@
                 labelColor: "#9CA3AF",
                 opacityFrom: 0,
                 opacityTo: 0.15,
-                // opacityFrom: 0.55,
-                // opacityTo: 0.35,
             };
         } else {
             mainChartColors = {
@@ -72,6 +69,8 @@
 
         return chartBuilder
     }
+
+    $: lineChartBuilder = createChartBuilder(dataSeries, legendOptions, fillOptions, true)
 
     onMount(() => {
         const dark = document.documentElement.classList.contains('dark');
