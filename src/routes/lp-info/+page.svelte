@@ -1,6 +1,6 @@
 <script>
     import { Breadcrumb, BreadcrumbItem, Heading } from "flowbite-svelte";
-    import LpInfo from "./LP-info.svelte";
+    import LpInfo from "./LPInfo.svelte";
 </script>
 
 <div
@@ -18,9 +18,9 @@
                     >Liquidity Pools Info</Heading
                 >
             </div>
+            <LpInfo/>
             <!-- <Dashboard /> -->
             <!-- <Overview /> -->
-            <LpInfo/>
         </div>
     </main>
 </div>

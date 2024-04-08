@@ -10,7 +10,7 @@ export class ChartOptionsBuilder {
             stroke: {},
             plotOptions: {},
             fill: {},
-
+            labels: [],
             subtitle: {},
             dataLabels: {},
             tooltip: {},
@@ -26,6 +26,12 @@ export class ChartOptionsBuilder {
 
     build() {
         return this.chartOptions;
+    }
+
+    setLables(labels: string[]) {
+        if (labels) {
+            this.chartOptions.labels = labels
+        }
     }
 
     setOverallOptions(overallChartOptions: ApexChart) {
@@ -176,7 +182,7 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
         // background: mainChartColors.backgroundColor,
         // foreColor: mainChartColors.labelColor,
         toolbar: {
-            show: true
+            show: false
         }
     })
 
@@ -288,6 +294,67 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
             }
         }
     ])
+
+    return chartOptionsBuilder
+
+}
+
+export function pieChart(dataPoints: number[], labels: string[], dark = false) {
+    let mainChartColors;
+
+    if (dark) {
+        mainChartColors = {
+            backgroundColor: '#000000',
+            borderColor: '#374151',
+            labelColor: '#9CA3AF',
+            opacityFrom: 0,
+            opacityTo: 0.15,
+        };
+    } else {
+        mainChartColors = {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#F3F4F6',
+            labelColor: '#6B7280',
+            opacityFrom: 0.55,
+            opacityTo: 0.35,
+        }
+    }
+
+    const chartOptionsBuilder = new ChartOptionsBuilder()
+
+    chartOptionsBuilder.setSeries(dataPoints)
+
+    chartOptionsBuilder.setOverallOptions({
+        height: 420,
+        type: 'pie',
+        fontFamily: 'Inter, sans-serif',
+        // background: mainChartColors.backgroundColor,
+        // foreColor: mainChartColors.labelColor,
+        toolbar: {
+            show: false
+        }
+    })
+
+    chartOptionsBuilder.setLables(labels)
+
+    chartOptionsBuilder.setTooltip({
+        style: {
+            fontSize: '14px',
+            fontFamily: 'Inter, sans-serif'
+        }
+    })
+
+    chartOptionsBuilder.setLegend({
+        fontSize: '14px',
+        fontWeight: 500,
+        fontFamily: 'Inter, sans-serif',
+        labels: {
+            colors: [mainChartColors.labelColor]
+        },
+        itemMargin: {
+            horizontal: 10
+        }
+    })
 
     return chartOptionsBuilder
 

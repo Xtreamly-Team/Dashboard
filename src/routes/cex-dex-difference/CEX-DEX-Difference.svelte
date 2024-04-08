@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { startReceivingCeXonWebsocket } from "$lib/api";
+    import { getSwapTransactions, startReceivingCeXonWebsocket } from "$lib/api";
     import DataCard from "$lib/components/DataCard.svelte";
 
     // TODO: Add gas fee to table
@@ -7,40 +7,54 @@
     import FactColumnItem from "$lib/components/dashboard/FactColumnItem.svelte";
     import TemporalChart from "$lib/components/dashboard/TemporalChart.svelte";
     import XyChart from "$lib/components/dashboard/XYChart.svelte";
-    import { timestampToDate } from "$lib/utils";
-    import { onMount } from "svelte";
+    import type { SwapTransaction } from "$lib/models";
+    import { StableCoins, getCurrentTime, timestampToDate } from "$lib/utils";
+    import { getContext, onMount } from "svelte";
+    import type { Writable } from "svelte/store";
+
+    // let swapTransactions = getContext<Writable<SwapTransaction[]>>("swapTransactions");
 
     // TODO: Make dates contain seconds
 
     let chartReady = false
 
-    let DEXPrice = [
-        // {x: 'apple', y: 10},
-        // {x: 'orange', y: 16}
-        { x: "05/06/2014", y: 4000 },
-        { x: "05/07/2014", y: 4105 },
-        { x: "05/08/2014", y: 4094 },
-        { x: "05/09/2014", y: 4101 },
-        { x: "05/10/2014", y: 4124 },
-        { x: "05/11/2014", y: 4079 },
-        { x: "05/12/2014", y: 4119 },
-    ];
+    let lastUpdatedCEXTimestamp = 0
+    let lastUpdatedDEXTimestamp = 0
 
-    let DexPriceSeries = {
+    let latestDEXPrice = 0
+    let latestCEXPrice = 0
+
+    $: differnecePercentage = latestDEXPrice ? Math.abs(((latestCEXPrice - latestDEXPrice) / latestDEXPrice)) * 100 : 0;
+
+    // let DEXPrice = [
+    //     // {x: 'apple', y: 10},
+    //     // {x: 'orange', y: 16}
+    //     { x: "05/06/2014", y: 4000 },
+    //     { x: "05/07/2014", y: 4105 },
+    //     { x: "05/08/2014", y: 4094 },
+    //     { x: "05/09/2014", y: 4101 },
+    //     { x: "05/10/2014", y: 4124 },
+    //     { x: "05/11/2014", y: 4079 },
+    //     { x: "05/12/2014", y: 4119 },
+    // ];
+
+    // $: DEXPriceData = $swapTransactions.length ? $swapTransactions.map((transaction) => {
+    //     return {
+    //         x: transaction.timestamp,
+    //         y: transaction.executedPrice
+    //     };
+    // }) : [];
+
+    let DEXPriceData = []
+
+
+    $: DexPriceSeries = {
         name: "DEX",
         type: "line",
-        data: DEXPrice,
+        data: DEXPriceData,
     };
 
-    let CeXPriceData = [
-        // { x: "05/06/2014", y: 4002 },
-        // { x: "05/07/2014", y: 4104 },
-        // { x: "05/08/2014", y: 4089 },
-        // { x: "05/09/2014", y: 4102 },
-        // { x: "05/10/2014", y: 4137 },
-        // { x: "05/11/2014", y: 4072 },
-        // { x: "05/12/2014", y: 4120 },
-    ];
+    let CeXPriceData = [];
 
     $: CEXPriceSeries = {
         name: "CEX",
@@ -50,23 +64,52 @@
 
     // TODO: Maybe add annotations
     $: DEXCEXSeries = [
-        // DexPriceSeries, 
+        DexPriceSeries, 
         CEXPriceSeries
     ];
 
     onMount(async () => {
         await startReceivingCeXonWebsocket(async (trades) => {
-            console.log(trades);
-            const newPoints = trades.map((trade, a, b) => {
-                const arbitaryDate = timestampToDate(trade.timestamp / 1000);
-                arbitaryDate.setDate(a)
-                return {
-                    x: arbitaryDate.toDateString(),
-                    y: trade.price,
+            // console.log($swapTransactions)
+                
+            //     .map((transaction) => {
+            //     return {
+            //         x: transaction.timestamp,
+            //         y: transaction.executedPrice
+            //     };
+            // }) : [];
+            const possibleNewTrade = trades.filter((trade) => trade.symbol === 'ETH-USDT' || trade.symbol === 'ETH-USDC')[0]
+            if (possibleNewTrade.timestamp <= lastUpdatedCEXTimestamp) {
+                return;
+            }
+            const newTrade = possibleNewTrade;
+            lastUpdatedCEXTimestamp = newTrade.timestamp;
+            latestCEXPrice = newTrade.price
+            const newPoint = {
+                // x: arbitaryDate.toDateString(),
+                x: lastUpdatedCEXTimestamp,
+                y: latestCEXPrice
+            };
+            CeXPriceData = [...CeXPriceData, newPoint];
+
+            let swapTransactions = await getSwapTransactions(
+                getCurrentTime() - 20,
+                getCurrentTime(),
+                10,
+            );
+            const possibleNewDexTrade = swapTransactions.filter((trade) => trade.timestamp - lastUpdatedDEXTimestamp > 3 && StableCoins.includes(trade.tokenOutSymbol)).at(0)
+            console.log(possibleNewDexTrade)
+            if (possibleNewDexTrade) {
+                const newDexTrade = possibleNewDexTrade;
+                lastUpdatedDEXTimestamp = newDexTrade.timestamp;
+                latestDEXPrice = newDexTrade.quotedPrice
+                const newDEXPoint = {
+                    x: lastUpdatedDEXTimestamp * 1000,
+                    y: latestDEXPrice,
                 };
-            });
-            CeXPriceData = [...CeXPriceData, ...newPoints]
-            console.log(CeXPriceData)
+                DEXPriceData = [...DEXPriceData, newDEXPoint];
+
+            }
         });
         chartReady = true
     });
@@ -74,9 +117,9 @@
 
 <DataCard title="Aggregate Data">
     <div class="w-full flex flex-wrap lg:flex-nowrap">
-        <FactColumn title="Average Difference" value="1.05%">
-            <FactColumnItem title="ETH (Uniswap)" value="4046" />
-            <FactColumnItem title="ETH (Binance)" value="4047.5" />
+        <FactColumn title="Average Difference" value="${differnecePercentage.toFixed(2)}%">
+            <FactColumnItem title="ETH (Uniswap)" value="$${latestDEXPrice.toFixed(1)}" />
+            <FactColumnItem title="ETH (Binance)" value="$${latestCEXPrice.toFixed(1)}" />
         </FactColumn>
         <div class="w-8" />
         <div class="w-full p-8">

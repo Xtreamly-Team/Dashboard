@@ -2,9 +2,9 @@
     import {
         SwapTransaction,
         SwapTransactionTableModel,
-    } from "$lib/models/models";
+    } from "$lib/models";
     import { truncateString, truncateNumber } from "$lib/utils";
-    import LastRange from "$lib/widgets/LastRange.svelte";
+    import LastRange from "$lib/components/LastRange.svelte";
     import {
         Button,
         Card,
@@ -18,20 +18,19 @@
         TableHead,
         TableHeadCell,
     } from "flowbite-svelte";
-    import {
-        CalendarMonthOutline,
-        ChevronDownOutline,
-        ChevronRightOutline,
-    } from "flowbite-svelte-icons";
-    import StatusBadge from "./StatusBadge.svelte";
-    import CreditCard from "./CreditCard.svelte";
     import DataCard from "../DataCard.svelte";
 
     export let shownNumber = 10;
 
     export let swapTransactions: SwapTransaction[] = [];
+    $: thresholdTransactionsRaw = swapTransactions.filter(
+        (transaction) => transaction.thresholdPercentage
+    );
     $: headers = SwapTransactionTableModel.headers();
     $: transactions = swapTransactions
+        .slice(0, shownNumber - 1)
+        .map(SwapTransactionTableModel.fromSwapTransaction);
+    $: thresholdTransactions = thresholdTransactionsRaw
         .slice(0, shownNumber - 1)
         .map(SwapTransactionTableModel.fromSwapTransaction);
 
@@ -53,7 +52,7 @@
             {/each}
         </TableHead>
         <TableBody>
-            {#each transactions as transaction}
+            {#each thresholdTransactions as transaction}
                 <TableBodyRow>
                     <TableBodyCell class="font-normal">
                         <a href={`https://etherscan.io/tx/${transaction.hash}`}>
@@ -63,8 +62,6 @@
                     <TableBodyCell class="font-normal"
                         >{transaction.blockNumber}</TableBodyCell
                     >
-                    <!-- <TableBodyCell class="font-normal">{transaction.tokenInSymbol}</TableBodyCell> -->
-                    <!-- <TableBodyCell class="font-normal">{transaction.tokenOutSymbol}</TableBodyCell> -->
                     <TableBodyCell class="font-normal"
                         >{`${truncateNumber(transaction.amountIn, 4)} ${
                             transaction.tokenInSymbol
@@ -98,15 +95,14 @@
                     >
                     <TableBodyCell class="font-normal"
                         >{truncateNumber(
+                            transaction.thresholdPercentage,
+                        )}</TableBodyCell
+                    >
+                    <TableBodyCell class="font-normal"
+                        >{truncateNumber(
                             transaction.priceImpact,
                         )}</TableBodyCell
                     >
-                    <!-- <TableBodyCell>{amount}</TableBodyCell> -->
-                    <!-- <TableBodyCell class="font-normal">{reference}</TableBodyCell> -->
-                    <!-- <TableBodyCell class="flex items-center gap-2 font-normal"> -->
-                    <!-- 	<CreditCard number={method} /> <span>••• {method}</span> -->
-                    <!-- </TableBodyCell> -->
-                    <!-- <TableBodyCell class="font-normal"><StatusBadge state={status} /></TableBodyCell> -->
                 </TableBodyRow>
             {/each}
         </TableBody>
