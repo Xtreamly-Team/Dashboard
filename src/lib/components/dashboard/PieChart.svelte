@@ -10,6 +10,7 @@
 
     let pieChartBuilder: ChartOptionsBuilder;
 
+    export let title: string = "";
     export let dataSeries: number[];
     export let labels: string[];
     export let legendOptions: ApexLegend | undefined = undefined;
@@ -41,7 +42,7 @@
                 opacityTo: 0.35,
             };
         }
-        let chartBuilder = pieChart(dataSeries, labels, dark);
+        let chartBuilder = pieChart(dataSeries, labels, title, dark);
         if (legendOptions) {
             chartBuilder.setLegend(legendOptions);
         } else {

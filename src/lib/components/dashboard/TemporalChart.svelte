@@ -11,6 +11,10 @@
     export let dataSeries: DataSeries;
     export let legendOptions: ApexLegend | undefined = undefined;
     export let fillOptions: ApexFill | undefined = undefined;
+    export let title: string = '';
+    export let xaxisTitle: string = "";
+    export let yaxisTitle: string = "";
+    export let y_formatter = (value: number) => Math.floor(value).toFixed(0);
 
     function createChartBuilder(dataSeries: DataSeries, 
         legendOptions: ApexLegend | undefined,
@@ -34,7 +38,13 @@
                 opacityTo: 0.35,
             };
         }
-        let chartBuilder = lineChart(dataSeries, dark);
+        let chartBuilder = lineChart(dataSeries, 
+            title,
+            xaxisTitle,
+            yaxisTitle,
+            dark,
+            y_formatter,
+        );
         if (fillOptions) {
             chartBuilder.setFill(fillOptions);
         }

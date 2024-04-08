@@ -11,6 +11,7 @@ export class ChartOptionsBuilder {
             plotOptions: {},
             fill: {},
             labels: [],
+            title: {},
             subtitle: {},
             dataLabels: {},
             tooltip: {},
@@ -73,6 +74,13 @@ export class ChartOptionsBuilder {
     setStates(statesOptions: ApexStates) {
         if (!this.chartOptions.states) return this;
         if (statesOptions) this.chartOptions.states = statesOptions;
+        return this;
+    }
+
+    setTitle(titleOptions: ApexTitleSubtitle) {
+
+        if (!this.chartOptions.title) return this;
+        if (titleOptions) this.chartOptions.title = titleOptions;
         return this;
     }
 
@@ -148,7 +156,12 @@ export class SimpleDataPoint {
 
 export type DataSeries = ApexAxisChartSeries | ApexNonAxisChartSeries;
 
-export function lineChart(dataPoints: DataSeries = [], dark = false) {
+export function lineChart(dataPoints: DataSeries = [],
+    title = '',
+    xaxis_title = '', yaxis_tile = '',
+    dark = false,
+    y_formatter = (value: number) => Math.floor(value).toString(),
+) {
     let mainChartColors;
 
     if (dark) {
@@ -183,6 +196,13 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
         // foreColor: mainChartColors.labelColor,
         toolbar: {
             show: false
+        }
+    })
+
+    chartOptionsBuilder.setTitle({
+        text: title,
+        style: {
+            color: mainChartColors.labelColor
         }
     })
 
@@ -224,11 +244,17 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
     })
 
     chartOptionsBuilder.setXaxis({
-        // categories: ['01 Feb', '02 Feb', '03 Feb', '04 Feb', '05 Feb', '06 Feb', '07 Feb'],
         type: 'datetime',
-        // type: 'category',
-        
+
         offsetX: -15,
+        title: {
+            text: xaxis_title,
+            style: {
+                color: mainChartColors.labelColor,
+                fontSize: '12px',
+                fontWeight: 500
+            }
+        },
         labels: {
             trim: true,
             style: {
@@ -258,15 +284,21 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
     })
 
     chartOptionsBuilder.setYaxis({
+        title: {
+            text: yaxis_tile,
+            style: {
+                color: mainChartColors.labelColor,
+                fontSize: '12px',
+                fontWeight: 500
+            }
+        },
         labels: {
             style: {
                 colors: mainChartColors.labelColor,
                 fontSize: '12px',
                 fontWeight: 500
             },
-            // formatter: function (value) {
-            //     return '$' + value;
-            // }
+            formatter: y_formatter
         }
     })
 
@@ -299,7 +331,7 @@ export function lineChart(dataPoints: DataSeries = [], dark = false) {
 
 }
 
-export function pieChart(dataPoints: number[], labels: string[], dark = false) {
+export function pieChart(dataPoints: number[],  labels: string[], title: string, dark = false) {
     let mainChartColors;
 
     if (dark) {
@@ -336,6 +368,13 @@ export function pieChart(dataPoints: number[], labels: string[], dark = false) {
     })
 
     chartOptionsBuilder.setLables(labels)
+
+    chartOptionsBuilder.setTitle({
+        text: title,
+        style: {
+            color: mainChartColors.labelColor
+        }
+    })
 
     chartOptionsBuilder.setTooltip({
         style: {

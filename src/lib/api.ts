@@ -1,4 +1,4 @@
-import { AggregatedSlippageAmount, LP, LPInfo, LPSnapshot, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
+import { AggregatedSlippageAmount, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
 import { getBlockIntervals } from "./utils";
 import { HubConnectionBuilder } from '@microsoft/signalr'
 
@@ -31,6 +31,26 @@ export async function getSwapTransactionsForIntervals(intervals: number[], limit
         intervalTransactions.push(transactions);
     }
     return intervalTransactions
+}
+
+export async function getMEVTransactions(from: number = 0, to: number = 0, limit: number = 10):
+Promise<MEVTransactions> {
+    // http://test.xtreamly.io:7321/$COMMAND
+    let requestUrl = `https://test.xtreamly.io:7321/get-mevs`
+
+    const data = {
+        start_block: from,
+        end_block: to,
+        limit: limit,
+    }
+
+    const response = await fetch(requestUrl, {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+    const rawRes = await response.json();
+    const mevTransactions = MEVTransactions.fromServerResponse(rawRes);
+    return mevTransactions
 }
 
 export async function getSlippageAmountForIntervals(intervals: number[]): Promise<AggregatedSlippageAmount[]> {

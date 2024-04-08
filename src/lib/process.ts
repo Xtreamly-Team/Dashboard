@@ -176,12 +176,7 @@ export function slippageChartData(aggregatedSlippages: AggregatedSlippageAmount[
 export function aggregateAverageVolatilityChartData(volatilitySnapshots: PoolVolatilitiesSnapshot[]) {
     let averageVolatilityData: number[] = []
     volatilitySnapshots.forEach((snapshot, j) => {
-        let cumulativePoolsVolatilityData = 0
         averageVolatilityData.push(snapshot.averageVolatility)
-        // snapshot.poolVolatilities.forEach((poolVolatility, i) => {
-        //     cumulativePoolsVolatilityData += poolVolatility.volatility
-        // })
-        // averageVolatilityData.push(cumulativePoolsVolatilityData / snapshot.poolVolatilities.length)
     })
 
     return volatilitySnapshots.map((snapshot, i) => {
@@ -193,6 +188,35 @@ export function aggregateAverageVolatilityChartData(volatilitySnapshots: PoolVol
 
 }
 
+export function aggregateAverageATRVolatilityChartData(volatilitySnapshots: PoolVolatilitiesSnapshot[]) {
+    let averageVolatilityData: number[] = []
+    volatilitySnapshots.forEach((snapshot, j) => {
+        averageVolatilityData.push(snapshot.averageATR)
+    })
+
+    return volatilitySnapshots.map((snapshot, i) => {
+        return {
+            x: timestampToDate(snapshot.timestamp),
+            y: averageVolatilityData[i],
+        };
+    })
+
+}
+
+export function aggregateAverageVarianceChartData(volatilitySnapshots: PoolVolatilitiesSnapshot[]) {
+    let averageVolatilityData: number[] = []
+    volatilitySnapshots.forEach((snapshot, j) => {
+        averageVolatilityData.push(snapshot.averageVariance)
+    })
+
+    return volatilitySnapshots.map((snapshot, i) => {
+        return {
+            x: timestampToDate(snapshot.timestamp),
+            y: averageVolatilityData[i],
+        };
+    })
+
+}
 
 export function getTokenVolumeData(volumeSnapshots: TokenVolumesSnapshot[]) {
     const volumeData = volumeSnapshots.map((snapshot) => {

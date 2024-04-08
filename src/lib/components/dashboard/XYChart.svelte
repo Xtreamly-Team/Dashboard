@@ -7,12 +7,14 @@
     import { Chart } from "flowbite-svelte";
     import { onMount } from "svelte";
 
-    let lineChartBuilder: ChartOptionsBuilder;
+    let scatterChartBuilder: ChartOptionsBuilder;
 
     export let dataSeries: DataSeries;
     export let legendOptions: ApexLegend | undefined = undefined;
+    export let title = '';
     export let xaxisTitle: string = "";
     export let yaxisTitle: string = "";
+    export let y_formatter = (value: number) => Math.floor(value).toFixed(0);
 
     function createChartBuilder(
         dataSeries: DataSeries,
@@ -42,7 +44,7 @@
                 opacityTo: 0.35,
             };
         }
-        let chartBuilder = lineChart(dataSeries, dark);
+        let chartBuilder = lineChart(dataSeries, title, '', '', dark, y_formatter);
         chartBuilder.setXaxis({
             type: "numeric",
             title: {
@@ -92,6 +94,7 @@
                     fontSize: "12px",
                     fontWeight: 500,
                 },
+                formatter: y_formatter,
             },
             title: {
                 text: yaxisTitle,
@@ -146,7 +149,7 @@
     onMount(() => {
         const dark = document.documentElement.classList.contains("dark");
 
-        lineChartBuilder = createChartBuilder(
+        scatterChartBuilder = createChartBuilder(
             dataSeries,
             legendOptions,
             xaxisTitle,
@@ -160,7 +163,7 @@
                     const dark =
                         document.documentElement.classList.contains("dark");
 
-                    lineChartBuilder = createChartBuilder(
+                    scatterChartBuilder = createChartBuilder(
                         dataSeries,
                         legendOptions,
                         xaxisTitle,
@@ -181,8 +184,8 @@
     });
 </script>
 
-{#if lineChartBuilder}
-    <Chart options={lineChartBuilder.build()}></Chart>
+{#if scatterChartBuilder}
+    <Chart options={scatterChartBuilder.build()}></Chart>
 {:else}
     <p>Loading...</p>
 {/if}

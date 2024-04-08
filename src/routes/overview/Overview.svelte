@@ -5,7 +5,6 @@
     import TemporalChart from "$lib/components/dashboard/TemporalChart.svelte";
     import XyChart from "$lib/components/dashboard/XYChart.svelte";
     import { getContext, onMount } from "svelte";
-    import TransactionCard from "./TransactionCard.svelte";
     import {
         TokenPair,
         SwapTransaction,
@@ -18,11 +17,10 @@
         PoolVolatilitiesSnapshot,
     } from "$lib/models";
     import { getSupportedTokens } from "$lib/utils";
-    import TransactionsTable from "$lib/components/dashboard/TransactionsTable.svelte";
-    import type { SimpleDataPoint } from "$lib/charts";
-    import { Card } from "flowbite-svelte";
     import DataCard from "$lib/components/DataCard.svelte";
     import {
+    aggregateAverageATRVolatilityChartData,
+    aggregateAverageVarianceChartData,
         aggregateAverageVolatilityChartData,
         aggregateVolumeChartData,
         applyRatio,
@@ -33,7 +31,7 @@
         tvlChartData,
     } from "$lib/process";
     import type { Writable } from "svelte/store";
-    import PieChart from "$lib/components/dashboard/PieChart.svelte";
+    import SwapTransactionsTable from "$lib/components/dashboard/SwapTransactionsTable.svelte";
 
     let swapTransactions =
  getContext<Writable<SwapTransaction[]>>("swapTransactions");
@@ -113,11 +111,29 @@
     // ];
 
     $: volatilitySeries = {
-        name: "Volatility",
+        name: "Volatility-Std",
         type: "line",
-        color: "#EE6D7A",
+        // color: "#EE6D7A",
         data: applyRatio(
             aggregateAverageVolatilityChartData($poolVolatilitySnapshots),
+            100,
+        ),
+    };
+    $: volatilityVarianceSeries = {
+        name: "Volatility-Variance",
+        type: "line",
+        // color: "#EE6D7A",
+        data: applyRatio(
+            aggregateAverageVarianceChartData($poolVolatilitySnapshots),
+            1,
+        ),
+    };
+    $: volatilityATRSeries = {
+        name: "Volatility-Variance",
+        type: "line",
+        // color: "#EE6D7A",
+        data: applyRatio(
+            aggregateAverageATRVolatilityChartData($poolVolatilitySnapshots),
             100,
         ),
     };
@@ -154,6 +170,8 @@
         negativeSlippageSeries,
         volumeSeries,
         volatilitySeries,
+        volatilityVarianceSeries,
+        volatilityATRSeries,
         // impermanentLossSeries,
     ];
 
@@ -213,13 +231,18 @@
                     <TemporalChart
                         dataSeries={overviewSeries}
                         fillOptions={overviewFillOptions}
+                        title="Overview"
+                        yaxisTitle="Amount (Relative)"
+                        xaxisTitle="Date"
                     />
                 {/if}
                 {#if priceImpactSeries[0].data.length > 0}
                     <XyChart
                         dataSeries={priceImpactSeries}
+                        title="Price Impact"
                         xaxisTitle="Amount In"
-                        yaxisTitle="Price Impact"
+                        yaxisTitle="Price Impact (%)"
+                        y_formatter={(y) => y.toFixed(2)}
                     />
                 {/if}
             </div>
@@ -228,4 +251,4 @@
 </DataCard>
 
 
-<TransactionsTable swapTransactions={$swapTransactions} />
+<SwapTransactionsTable swapTransactions={$swapTransactions} />

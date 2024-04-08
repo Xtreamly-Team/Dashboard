@@ -11,10 +11,12 @@
         tokenVolumesSnapshotsStore,
         lpRegistryStore,
         slippageCountStore,
+        mevTransactionsStore,
     } from "$lib/stores";
     import {
     getBlockForTimestamp,
     getLPInfosForIntervals,
+        getMEVTransactions,
         getPoolsForTokenPair,
         getSlippageAmountForIntervals,
         getSwapTransactions,
@@ -34,6 +36,7 @@
 
     let drawerHidden = true;
     setContext("swapTransactions", swapTransactionsStore);
+    setContext("mevTransactions", mevTransactionsStore);
     setContext("slippageCount", slippageCountStore);
     setContext("aggregatedSlippages", aggregatedSlippagesStore);
     setContext("tokenVolumesSnapshots", tokenVolumesSnapshotsStore);
@@ -64,6 +67,13 @@
         const currentTime = getCurrentTime();
 
         console.log("Start")
+
+        let mevTransactions = await getMEVTransactions(19546991,19600000, 50)
+
+        console.log(mevTransactions)
+
+        mevTransactionsStore.set(mevTransactions)
+
         let lps = [... await getPoolsForTokenPair(new TokenPair(WETH, USDT)),
             ... await getPoolsForTokenPair(new TokenPair(WETH, USDC))] 
 

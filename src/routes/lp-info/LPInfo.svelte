@@ -18,6 +18,8 @@
     import { getSupportedTokens } from "$lib/utils";
     import DataCard from "$lib/components/DataCard.svelte";
     import {
+    aggregateAverageATRVolatilityChartData,
+    aggregateAverageVarianceChartData,
         aggregateAverageVolatilityChartData,
         aggregateVolumeChartData,
         applyRatio,
@@ -79,6 +81,14 @@
         ?.averageVolatility;
     $: ETH_USDC_last24HoursVolatility = [...usdcPoolVolatilitySnapshots].pop()
         ?.averageVolatility;
+    $: ETH_USDT_last24HoursVolatilityATR = [...usdtPoolVolatilitySnapshots].pop()
+        ?.averageATR;
+    $: ETH_USDC_last24HoursVolatilityATR = [...usdcPoolVolatilitySnapshots].pop()
+        ?.averageATR;
+    $: ETH_USDT_last24HoursVolatilityVariance = [...usdtPoolVolatilitySnapshots].pop()
+        ?.averageVariance;
+    $: ETH_USDC_last24HoursVolatilityVariance = [...usdcPoolVolatilitySnapshots].pop()
+        ?.averageVariance;
 
     $: usdtTvlDataSeries = {
         name: "ETH-USDT",
@@ -142,10 +152,41 @@
         data: aggregateAverageVolatilityChartData(usdcPoolVolatilitySnapshots),
     };
 
+
+    $: usdtVolatilityATRSeries = {
+        name: "ETH-USDT",
+        type: "line",
+        // color: "#EE6D7A",
+        data: aggregateAverageATRVolatilityChartData(usdtPoolVolatilitySnapshots),
+    };
+
+    $: usdcVolatilityATRSeries = {
+        name: "ETH-USDC",
+        type: "line",
+        // color: "#EE6D7A",
+        data: aggregateAverageATRVolatilityChartData(usdcPoolVolatilitySnapshots),
+    };
+
+    $: usdtVolatilityVarianceSeries = {
+        name: "ETH-USDT",
+        type: "line",
+        // color: "#EE6D7A",
+        data: aggregateAverageVarianceChartData(usdtPoolVolatilitySnapshots),
+    };
+
+    $: usdcVolatilityVarianceSeries = {
+        name: "ETH-USDC",
+        type: "line",
+        // color: "#EE6D7A",
+        data: aggregateAverageVarianceChartData(usdcPoolVolatilitySnapshots),
+    };
+
     $: tvlSeries = [usdtTvlDataSeries, usdcTvlDataSeries];
     $: liquiditySeries = [usdtLiquidityDataSeries, usdcLiquidityDataSeries];
     // $: volumeSeries = [usdtVolumeSeries, usdcVolumeSeries, ethVolumeSeries];
     $: volatilitySeries = [usdtVolatilitySeries, usdcVolatilitySeries];
+    $: volatilityATRSeries = [usdtVolatilityATRSeries, usdcVolatilityATRSeries];
+    $: volatilityVarianceSeries = [usdtVolatilityVarianceSeries, usdcVolatilityVarianceSeries];
 
     // $: overviewSeries = [
     //     tvlDataSeries,
@@ -196,25 +237,69 @@
                 value={`${ETH_USDC_last24HoursLiquidity.toFixed(0)} ETH`}
             />
             <FactColumnItem
-                title="ETH_USDT Volatility (Last 24 hours)"
-                value={`$${ETH_USDT_last24HoursVolatility?.toFixed(2)}%`}
+                title="ETH_USDT Volatility Std (Last 24 hours)"
+                value={`${ETH_USDT_last24HoursVolatility?.toFixed(2)}`}
             />
             <FactColumnItem
-                title="ETH_USDC Volatility (Last 24 hours)"
-                value={`$${ETH_USDC_last24HoursVolatility?.toFixed(2)}%`}
+                title="ETH_USDC Volatility Std (Last 24 hours)"
+                value={`${ETH_USDC_last24HoursVolatility?.toFixed(2)}`}
+            />
+            <FactColumnItem
+                title="ETH_USDT Volatility ATR (Last 24 hours)"
+                value={`${ETH_USDT_last24HoursVolatilityATR?.toFixed(2)}`}
+            />
+            <FactColumnItem
+                title="ETH_USDC Volatility ATR (Last 24 hours)"
+                value={`${ETH_USDC_last24HoursVolatilityATR?.toFixed(2)}`}
+            />
+            <FactColumnItem
+                title="ETH_USDT Volatility Variance (Last 24 hours)"
+                value={`${ETH_USDT_last24HoursVolatilityVariance?.toFixed(2)}`}
+            />
+            <FactColumnItem
+                title="ETH_USDC Volatility Variance (Last 24 hours)"
+                value={`${ETH_USDC_last24HoursVolatilityVariance?.toFixed(2)}`}
             />
         </FactColumn>
         <div class="w-8" />
         <div class="w-full p-8">
             <div class="flex flex-col">
                 {#if tvlSeries != undefined}
-                    <TemporalChart dataSeries={tvlSeries} />
+                    <TemporalChart 
+                        title="TVL"
+                        yaxisTitle="TVL (M$)"
+                        xaxisTitle="Date"
+                        dataSeries={tvlSeries}
+
+                    />
                 {/if}
                 {#if liquiditySeries != undefined}
-                    <TemporalChart dataSeries={liquiditySeries} />
+                    <TemporalChart 
+                        title="Liquidty"
+                        yaxisTitle="Liquidity (ETH)"
+                        xaxisTitle="Date"
+                        dataSeries={liquiditySeries} />
                 {/if}
                 {#if volatilitySeries != undefined}
-                    <TemporalChart dataSeries={volatilitySeries} />
+                    <TemporalChart 
+                        title="Volatility STD"
+                        yaxisTitle="Volatility Standard Deviation"
+                        xaxisTitle="Date"
+                        dataSeries={volatilitySeries} />
+                {/if}
+                {#if volatilityATRSeries != undefined}
+                    <TemporalChart 
+                        title="Volatility ATR"
+                        yaxisTitle="Volatility ATR"
+                        xaxisTitle="Date"
+                        dataSeries={volatilityATRSeries} />
+                {/if}
+                {#if volatilityVarianceSeries != undefined}
+                    <TemporalChart 
+                        title="Volatility Variance"
+                        yaxisTitle="Volatility Variance"
+                        xaxisTitle="Date"
+                        dataSeries={volatilityVarianceSeries} />
                 {/if}
             </div>
         </div>

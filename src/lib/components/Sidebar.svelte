@@ -74,17 +74,17 @@
 			// 	Users: '/crud/users'
 			// }
 		},
-		{
-			name: 'Mev-Slippage',
-			icon: FileChartBarSolid,
-            href: '/mev-slippage'
-			// children: {
-			// 	Pricing: '/pages/pricing',
-			// 	Maintenance: '/errors/400',
-			// 	'404 not found': '/errors/404',
-			// 	'500 server error': '/errors/500'
-			// }
-		},
+		// {
+		// 	name: 'Mev-Slippage',
+		// 	icon: FileChartBarSolid,
+  //           href: '/mev-slippage'
+		// 	// children: {
+		// 	// 	Pricing: '/pages/pricing',
+		// 	// 	Maintenance: '/errors/400',
+		// 	// 	'404 not found': '/errors/404',
+		// 	// 	'500 server error': '/errors/500'
+		// 	// }
+		// },
 		{
 			name: 'Liqudity Pools Info',
 			icon: LockSolid,

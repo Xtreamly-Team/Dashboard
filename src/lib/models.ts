@@ -59,6 +59,8 @@ export class SwapTransaction {
     }
 }
 
+
+
 export class SwapTransactionTableModel {
     constructor(
         public hash: string,
@@ -116,6 +118,128 @@ export class SwapTransactionTableModel {
         );
     }
 }
+
+
+export class MEVTransactions {
+    constructor(
+        public arbitrageTransactions: MEVArbitrageTransaction[],
+        public sandwichTransactions: MEVSandwhichTransaction[],
+    ) { }
+
+    static fromServerResponse(response: any): MEVTransactions {
+        return new MEVTransactions(
+            MEVArbitrageTransaction.fromServerResponse(response),
+            MEVSandwhichTransaction.fromServerResponse(response),
+        );
+    }
+}
+
+export class MEVArbitrageTransaction {
+    constructor(
+        public hash: string,
+        public blockNumber: number,
+        public start_amount: number,
+        public end_amount: number,
+        public profit_amount: number,
+    ) { }
+
+    static fromServerResponse(response: any): MEVArbitrageTransaction[] {
+        const mevTransactions = JSON.parse(response['arbitrages'])
+        const mevArbitrageTransactions: MEVArbitrageTransaction[] = []
+        mevTransactions.forEach((mev: any) => {
+            mevArbitrageTransactions.push(new MEVArbitrageTransaction(
+                mev['transaction_hash'],
+                mev['block_number'],
+                mev['start_amount'],
+                mev['end_amount'],
+                mev['profit_amount'],
+            ))
+        })
+        return mevArbitrageTransactions;
+    }
+}
+
+export class MEVSandwhichTransaction {
+    constructor(
+        public blockNumber: number,
+        public frontrun_hash: string,
+        public backrunrun_hash: string,
+        public profit_amount: number,
+    ) { }
+
+    static fromServerResponse(response: any): MEVSandwhichTransaction[] {
+        const mevTransactions = JSON.parse(response['sandwiches'])
+        const mevArbitrageTransactions: MEVSandwhichTransaction[] = []
+        mevTransactions.forEach((mev: any) => {
+            mevArbitrageTransactions.push(new MEVSandwhichTransaction(
+                mev['block_number'],
+                mev['frontrun_swap_transaction_hash'],
+                mev['backrun_swap_transaction_hash'],
+                mev['profit_amount'],
+            ))
+        })
+        return mevArbitrageTransactions;
+    }
+}
+
+export class MEVArbitrageTransactionTableModel {
+    constructor(
+        public hash: string,
+        public blockNumber: number,
+        public start_amount: number,
+        public end_amount: number,
+        public profit: number,
+    ) { }
+
+    static headers() {
+        return [
+            'Hash',
+            'Block',
+            'Start Amount',
+            'End Amount',
+            'Profit',
+        ];
+    }
+
+    static fromMEVArbitrageTransaction(mevTransaction: MEVArbitrageTransaction): MEVArbitrageTransactionTableModel {
+        return new MEVArbitrageTransactionTableModel(
+            mevTransaction.hash,
+            mevTransaction.blockNumber,
+            mevTransaction.start_amount,
+            mevTransaction.end_amount,
+            mevTransaction.profit_amount,
+        );
+    }
+}
+
+
+export class MEVSandwichTransactionTableModel {
+    constructor(
+        public fronrun_hash: string,
+        public backrun_hash: string,
+        public blockNumber: number,
+        public profit: number,
+    ) { }
+
+    static headers() {
+        return [
+            'Frontrun Hash',
+            'Backrun Hash',
+            'Block',
+            'Profit',
+        ];
+    }
+
+    static fromMEVSandwichTransaction(mevTransaction: MEVSandwhichTransaction): MEVSandwichTransactionTableModel {
+        return new MEVSandwichTransactionTableModel(
+            mevTransaction.frontrun_hash,
+            mevTransaction.backrunrun_hash,
+            mevTransaction.blockNumber,
+            mevTransaction.profit_amount,
+        );
+    }
+}
+
 
 export class AggregatedSlippageAmount {
     constructor(
@@ -176,6 +300,10 @@ export class PoolVolatilitiesSnapshot {
         return this.poolVolatilities.reduce((acc, poolVolatility) => acc + poolVolatility.volatility, 0) / this.poolVolatilities.length;
     }
 
+    get averageVariance() {
+        return this.poolVolatilities.reduce((acc, poolVolatility) => acc + poolVolatility.variance, 0) / this.poolVolatilities.length;
+    }
+
     get averageATR() {
         return this.poolVolatilities.reduce((acc, poolVolatility) => acc + poolVolatility.averageTrueRange, 0) / this.poolVolatilities.length;
     }
@@ -189,6 +317,7 @@ export class PoolVolatilitiesSnapshot {
                 poolVolatility['poolAddress'],
                 poolVolatility['atr'],
                 poolVolatility['standardDeviation'],
+                poolVolatility['variance'],
             ))
         })
         return new PoolVolatilitiesSnapshot(
@@ -204,6 +333,7 @@ export class PoolVolatility {
         public poolAddress: string,
         public averageTrueRange: number,
         public volatility: number,
+        public variance: number,
     ) { }
 }
 

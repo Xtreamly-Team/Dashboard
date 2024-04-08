@@ -106,8 +106,13 @@
                             positiveSlippageSeries,
                             negativeSlippageSeries,
                         ]}
+                        title="Slippage Amount"
+                        yaxisTitle="Slippage Amount ($)"
+                        xaxisTitle="Date"
+                        y_formatter={(value) => Math.floor(value).toLocaleString()}
                     />
                     <PieChart
+                        title="Slippage Distribution"
                         dataSeries={slippagePieChartData}
                         labels={["Positive Slippage", "Negative Slippage"]}
                     />
