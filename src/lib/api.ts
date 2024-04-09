@@ -138,6 +138,7 @@ export async function getBlockTimestamp(blockNumber: number): Promise<number> {
     return +timestamp
 }
 
+// Should be in seconds
 export async function getBlockForTimestamp(timestamp: number): Promise<number> {
     let requestUrl = `${API_URL}/Utilities/TimeToBlock`
     let queryParams = new URLSearchParams({

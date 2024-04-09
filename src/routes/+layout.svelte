@@ -63,12 +63,18 @@
         const numberOfSlippages = await getSwapsCount(pastWeekIntervals)
         slippageCountStore.set(numberOfSlippages)
 
-        const currentDayStart = pastWeekIntervals[0];
+        // TODO: Fix to -1 after we have enough data
+        const currentDayStart = pastWeekIntervals.at(-4)!;
         const currentTime = getCurrentTime();
 
         console.log("Start")
 
-        let mevTransactions = await getMEVTransactions(19546991,19600000, 50)
+        const currentBlock = await getBlockForTimestamp(currentTime)
+        const currentDayStartBlock = await getBlockForTimestamp(currentDayStart)
+
+        console.log(currentBlock, currentDayStartBlock)
+
+        let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlock, 5000)
 
         console.log(mevTransactions)
 
