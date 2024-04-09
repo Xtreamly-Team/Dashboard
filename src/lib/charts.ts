@@ -132,7 +132,7 @@ export class ChartOptionsBuilder {
         return this;
     }
 
-    setYaxis(yaxisOptions?: ApexYAxis) {
+    setYaxis(yaxisOptions?: ApexYAxis | ApexYAxis[]) {
         if (!this.chartOptions.yaxis) return this;
         if (yaxisOptions) this.chartOptions.yaxis = yaxisOptions
         return this;
@@ -169,8 +169,8 @@ export function lineChart(dataPoints: DataSeries = [],
             backgroundColor: '#000000',
             borderColor: '#374151',
             labelColor: '#9CA3AF',
-            opacityFrom: 0,
-            opacityTo: 0.15,
+            // opacityFrom: 0,
+            // opacityTo: 0.15,
             // opacityFrom: 0.55,
             // opacityTo: 0.35,
         };
@@ -301,6 +301,188 @@ export function lineChart(dataPoints: DataSeries = [],
             formatter: y_formatter
         }
     })
+
+    chartOptionsBuilder.setLegend({
+        fontSize: '14px',
+        fontWeight: 500,
+        fontFamily: 'Inter, sans-serif',
+        labels: {
+            colors: [mainChartColors.labelColor]
+        },
+        itemMargin: {
+            horizontal: 10
+        }
+    })
+
+    chartOptionsBuilder.setResponsive([
+        {
+            breakpoint: 1024,
+            options: {
+                xaxis: {
+                    labels: {
+                        show: false
+                    }
+                }
+            }
+        }
+    ])
+
+    return chartOptionsBuilder
+
+}
+
+
+export function multiYAxisLineChart(dataPoints: DataSeries = [],
+    title = '',
+    xaxis_title = '', yaxis_titles: string[] = [],
+    dark = false,
+    y_formatters = [],
+) {
+    let mainChartColors;
+
+    if (dark) {
+        mainChartColors = {
+            backgroundColor: '#000000',
+            borderColor: '#374151',
+            labelColor: '#9CA3AF',
+            // opacityFrom: 0,
+            // opacityTo: 0.15,
+            // opacityFrom: 0.55,
+            // opacityTo: 0.35,
+        };
+    } else {
+        mainChartColors = {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#F3F4F6',
+            labelColor: '#6B7280',
+            opacityFrom: 0.55,
+            opacityTo: 0.35,
+        }
+    }
+
+    const chartOptionsBuilder = new ChartOptionsBuilder()
+
+    chartOptionsBuilder.setSeries(dataPoints)
+
+    chartOptionsBuilder.setOverallOptions({
+        height: 420,
+        type: 'line',
+        fontFamily: 'Inter, sans-serif',
+        // background: mainChartColors.backgroundColor,
+        // foreColor: mainChartColors.labelColor,
+        toolbar: {
+            show: false
+        }
+    })
+
+    chartOptionsBuilder.setTitle({
+        text: title,
+        style: {
+            color: mainChartColors.labelColor
+        }
+    })
+
+    chartOptionsBuilder.setDataLabels({
+        enabled: false
+    })
+
+    chartOptionsBuilder.setTooltip({
+        style: {
+            fontSize: '14px',
+            fontFamily: 'Inter, sans-serif'
+        }
+    })
+
+    chartOptionsBuilder.setGrid({
+        show: true,
+        borderColor: mainChartColors.borderColor,
+        strokeDashArray: 1,
+        padding: {
+            left: 35,
+            bottom: 15
+        }
+    })
+
+    chartOptionsBuilder.setStroke({
+        curve: 'straight',
+        width: 2,
+        // colors: ['#000'],
+    })
+
+
+    chartOptionsBuilder.setMarkers({
+        size: 0,
+        strokeColors: '#ffffff',
+        hover: {
+            size: undefined,
+            sizeOffset: 3
+        }
+    })
+
+    chartOptionsBuilder.setXaxis({
+        type: 'datetime',
+
+        offsetX: -15,
+        title: {
+            text: xaxis_title,
+            style: {
+                color: mainChartColors.labelColor,
+                fontSize: '12px',
+                fontWeight: 500
+            }
+        },
+        labels: {
+            trim: true,
+            style: {
+                colors: mainChartColors.labelColor,
+                fontSize: '12px',
+                fontWeight: 500
+            }
+        },
+        axisBorder: {
+            color: mainChartColors.borderColor
+        },
+        axisTicks: {
+            color: mainChartColors.borderColor
+        },
+        crosshairs: {
+            show: true,
+            position: 'back',
+            stroke: {
+                color: mainChartColors.borderColor,
+                width: 1,
+                dashArray: 10
+            }
+        },
+        tooltip: {
+            enabled: false
+        }
+    })
+
+    const yaxis = []
+
+    for (let i = 0; i < yaxis_titles.length; i++) {
+        yaxis.push({
+            title: {
+                text: yaxis_titles[i],
+                style: {
+                    color: mainChartColors.labelColor,
+                    fontSize: '12px',
+                    fontWeight: 500
+                }
+            },
+            labels: {
+                style: {
+                    colors: mainChartColors.labelColor,
+                    fontSize: '12px',
+                    fontWeight: 500
+                },
+                formatter: y_formatters[i]
+            }
+        })
+    }
+
+    chartOptionsBuilder.setYaxis(yaxis)
 
     chartOptionsBuilder.setLegend({
         fontSize: '14px',

@@ -32,6 +32,7 @@
     } from "$lib/process";
     import type { Writable } from "svelte/store";
     import SwapTransactionsTable from "$lib/components/dashboard/SwapTransactionsTable.svelte";
+    import MultiYaxisTemporalChart from "$lib/components/dashboard/MultiYaxisTemporalChart.svelte";
 
     let swapTransactions =
  getContext<Writable<SwapTransaction[]>>("swapTransactions");
@@ -80,7 +81,7 @@
     $: tvlDataSeries = {
         name: "TVL",
         type: "area",
-        data: applyRatio(tvlChartData($lpRegistry), 0.001),
+        data: applyRatio(tvlChartData($lpRegistry), 1),
     };
 
     $: positiveSlippageData = slippageChartData($aggregatedSlippages, true);
@@ -102,7 +103,7 @@
     $: volumeSeries = {
         name: "Volume",
         type: "bar",
-        data: applyRatio(volumeData, 0.001),
+        data: applyRatio(volumeData, 1),
     };
 
     // $: volatilityData = [
@@ -116,7 +117,7 @@
         // color: "#EE6D7A",
         data: applyRatio(
             aggregateAverageVolatilityChartData($poolVolatilitySnapshots),
-            100,
+            1,
         ),
     };
     $: volatilityVarianceSeries = {
@@ -134,7 +135,7 @@
         // color: "#EE6D7A",
         data: applyRatio(
             aggregateAverageATRVolatilityChartData($poolVolatilitySnapshots),
-            100,
+            1,
         ),
     };
 
@@ -163,6 +164,14 @@
     //         // stops: [0, 100]
     //     },
     // };
+    // const y_formatters={Array(5).fill((y) => y.toFixed(0))}
+    const y_formatters=[
+        y => 0.000001 * y.toFixed(0),
+        y => 0.001 * y.toFixed(0),
+        y => 0.001 * y.toFixed(0),
+        y => 0.000001 * y.toFixed(0),
+        y => y.toFixed(0),
+    ]
 
     $: overviewSeries = [
         tvlDataSeries,
@@ -170,8 +179,8 @@
         negativeSlippageSeries,
         volumeSeries,
         volatilitySeries,
-        volatilityVarianceSeries,
-        volatilityATRSeries,
+        // volatilityVarianceSeries,
+        // volatilityATRSeries,
         // impermanentLossSeries,
     ];
 
@@ -179,15 +188,15 @@
     // let overviewSeries: ApexAxisChartSeries | undefined = undefined;
 
     let overviewFillOptions = {
-        type: ["gradient", "solid", "solid", "solid"],
+        type: ["gradient", "solid", "solid", "solid", "solid", "solid", "solid"],
         // type: 'gradient',
         gradient: {
             shadeIntensity: 0.5,
             type: "vertical",
             shade: "dark",
             // inverseColors: false,
-            opacityFrom: [0.55, 1, 1, 0.8],
-            opacityTo: [0.35, 1, 1, 0.8],
+            opacityFrom: [0.55, 1, 1, 1, 1, 1, 1],
+            opacityTo: [0.35, 1, 1, 1, 1, 1, 1],
             // stops: [0, 100]
         },
     };
@@ -213,7 +222,7 @@
             />
             <FactColumnItem
                 title="Average Volatility (Last 24 hours)"
-                value={`${last24HoursVolatility?.toFixed(2)}%`}
+                value={`${last24HoursVolatility?.toFixed(2)}`}
             />
             <FactColumnItem
                 title="Total Positive Slippage (Last 24 hours)"
@@ -224,16 +233,18 @@
                 value={`$${last24HoursNegativeSlippage?.toFixed(0)}K`}
             />
         </FactColumn>
+    </div>
         <div class="w-8" />
         <div class="w-full p-8">
             <div class="flex flex-col">
                 {#if overviewSeries != undefined}
-                    <TemporalChart
+                    <MultiYaxisTemporalChart
                         dataSeries={overviewSeries}
                         fillOptions={overviewFillOptions}
                         title="Overview"
-                        yaxisTitle="Amount (Relative)"
                         xaxisTitle="Date"
+                        yaxisTitles={["TVL (M$)", "Positive SP (K$)", "Negative SP (K$)", "Volume (M$)", "Volatility"]}
+                        y_formatters={y_formatters}
                     />
                 {/if}
                 {#if priceImpactSeries[0].data.length > 0}
@@ -247,7 +258,6 @@
                 {/if}
             </div>
         </div>
-    </div>
 </DataCard>
 
 
