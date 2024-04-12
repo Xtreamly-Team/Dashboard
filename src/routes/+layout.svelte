@@ -12,9 +12,11 @@
         lpRegistryStore,
         slippageCountStore,
         mevTransactionsStore,
+        poolImpermanentLossSnapshotsStore,
     } from "$lib/stores";
     import {
     getBlockForTimestamp,
+    getImpermanentLoss,
     getLPInfosForIntervals,
         getMEVTransactions,
         getPoolsForTokenPair,
@@ -41,6 +43,7 @@
     setContext("aggregatedSlippages", aggregatedSlippagesStore);
     setContext("tokenVolumesSnapshots", tokenVolumesSnapshotsStore);
     setContext("poolVolatilitySnapshots", poolVolatilitySnapshotsStore);
+    setContext("poolImpermanentLossSnapshots", poolImpermanentLossSnapshotsStore);
     setContext("lpRegistry", lpRegistryStore);
 
     const [WETH, USDT, USDC, DAI] = getSupportedTokens();
@@ -76,7 +79,7 @@
 
         let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlock, 5000)
 
-        console.log(mevTransactions)
+        // console.log(mevTransactions)
 
         mevTransactionsStore.set(mevTransactions)
 
@@ -108,29 +111,35 @@
 
         swapTransactionsStore.set(transactions);
 
-        // WORKS
+        let impermanentLossData = await getImpermanentLoss(
+            pastWeekIntervals,
+        );
+
+        poolImpermanentLossSnapshotsStore.set(impermanentLossData);
+
+        // // WORKS
         const aggregatedSlippageAmount =
             await getSlippageAmountForIntervals(pastWeekIntervals);
 
         aggregatedSlippagesStore.set(aggregatedSlippageAmount);
-
-        // WORKS
+        //
+        // // WORKS
         const volumes = await getVolumeForAllTokens(
             pastWeekIntervals,
         );
 
         tokenVolumesSnapshotsStore.set(volumes);
-
-        // // WORKS
-        // // NOTE: Heavy call, takes a while
+        //
+        // // // WORKS
+        // // // NOTE: Heavy call, takes a while
         const volatilities = await getVolatilityForIntervals(
             pastWeekIntervals,
         );
-
+        //
         poolVolatilitySnapshotsStore.set(volatilities);
-        // console.log(volatilities)
-
-        console.log("End")
+        // // console.log(volatilities)
+        //
+        // console.log("End")
 
 
     });

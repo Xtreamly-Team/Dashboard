@@ -1,4 +1,4 @@
-import { AggregatedSlippageAmount, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
+import { AggregatedSlippageAmount, ImpermanentLossSnapshot, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
 import { getBlockIntervals } from "./utils";
 import { HubConnectionBuilder } from '@microsoft/signalr'
 
@@ -6,7 +6,7 @@ const SERVER_HOST = 'https://test.xtreamly.io:5000';
 const API_URL = `${SERVER_HOST}/api/v1`;
 
 export async function getSwapTransactions(from: number = 0, to: number = 0, limit: number = 10):
-Promise<SwapTransaction[]> {
+    Promise<SwapTransaction[]> {
     let requestUrl = `${API_URL}/Slippage/SlippageHistory`
     let queryParams = new URLSearchParams({
         startTime: from == 0 ? '0' : `${from}`,
@@ -34,7 +34,7 @@ export async function getSwapTransactionsForIntervals(intervals: number[], limit
 }
 
 export async function getMEVTransactions(from: number = 0, to: number = 0, limit: number = 10):
-Promise<MEVTransactions> {
+    Promise<MEVTransactions> {
     // http://test.xtreamly.io:7321/$COMMAND
     let requestUrl = `https://test.xtreamly.io:7321/get-mevs`
 
@@ -64,7 +64,7 @@ export async function getSlippageAmountForIntervals(intervals: number[]): Promis
         const response = await fetch(`${requestUrl}?${queryParams}`);
         const rawRes = await response.json();
         let aggregatedAmount = AggregatedSlippageAmount.fromServerResponse(intervals[i], rawRes);
-        
+
         intervalAggregates.push(aggregatedAmount);
         // intervalAggregates = [...intervalAggregates, aggregatedAmount]
     }
@@ -201,7 +201,7 @@ export async function getLPInfosForIntervals(lp: LP, intervals: number[]): Promi
     const lpInfoInterval = await Promise.allSettled(blockNumbers.map(async (blockNumber) => {
         return await getLPInfoWithBlock(lp, blockNumber);
     }))
-    
+
     const res = lpInfoInterval.filter((r) => r.status === 'fulfilled').map((r) => r.value)
     return res
 }
@@ -234,23 +234,36 @@ export async function getSwapsCount(intervals: number[]): Promise<number[]> {
     return numbers
 }
 
-// Takes millisecond
-// export async function getImpermanentLoss(intervals: number[]): Promise<number[]> {
-//     const numbers = []
-//     for (let i = 0; i < intervals.length - 1; i++) {
-//         let requestUrl = `${API_URL}/ImpermanentLoss/CalculateForAllAddresses`
-//         let queryParams = new URLSearchParams({
-//             startTime: intervals[i].toString(),
-//             endTime: intervals[i + 1].toString(),
-//         })
-//
-//         const url = `${requestUrl}?${queryParams}`
-//         const response = await fetch(url);
-//         const rawRes = await response.json();
-//         numbers.push(rawRes)
-//     }
-//     return numbers
-// }
+export async function getImpermanentLossRaw(intervals: number[]): Promise<number[]> {
+    return []
+}
+
+export async function getImpermanentLoss(intervals: number[]): Promise<ImpermanentLossSnapshot[]> {
+    const snapshots = []
+    for (let i = 0; i < intervals.length - 1; i++) {
+        // https://test.xtreamly.io:5000/api/v1/ImpermanentLoss/CalculateForAllAddresses?startTime=1712835245000&endTime=1712928135608
+        await new Promise(r => setTimeout(r, 100));
+        
+        try {
+            let requestUrl = `${API_URL}/ImpermanentLoss/GetForAllPools`
+            // Takes millisecond
+            const startTime = intervals[i] * 1000
+            const endTime = intervals[i + 1] * 1000
+            let queryParams = new URLSearchParams({
+                startTime: startTime.toString(),
+                endTime: endTime.toString(),
+            })
+            const url = `${requestUrl}?${queryParams}`
+            const response = await fetch(url);
+            const rawRes = await response.json();
+            const ILSnapshot = ImpermanentLossSnapshot.fromServerResponse(rawRes, startTime, endTime);
+            snapshots.push(ILSnapshot)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+    return snapshots
+}
 
 export async function startReceivingCeXonWebsocket(
     onReceive = async (message: CEXTrade[]) => { console.log(message) }

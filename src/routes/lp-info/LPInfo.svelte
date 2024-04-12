@@ -14,6 +14,7 @@
         AggregatedSlippageAmount,
         type LPRegistry,
         PoolVolatilitiesSnapshot,
+        ImpermanentLossSnapshot,
     } from "$lib/models";
     import { getSupportedTokens } from "$lib/utils";
     import DataCard from "$lib/components/DataCard.svelte";
@@ -21,12 +22,14 @@
     aggregateAverageATRVolatilityChartData,
     aggregateAverageVarianceChartData,
         aggregateAverageVolatilityChartData,
+        aggregateImpermanentLossChartData,
         aggregateVolumeChartData,
         applyRatio,
         calculateAggregateLiquidity,
         calculateAggregateTVL,
         liquidityChartData,
         splitLPRegistry,
+        splitPoolImpermanentLossSnapshots,
         splitPoolVolatilitySnapshots,
         splitTokenVolumeSnapshots,
         tvlChartData,
@@ -40,9 +43,12 @@
     let tokenVolumesSnapshots = getContext<Writable<TokenVolumesSnapshot[]>>(
         "tokenVolumesSnapshots",
     );
-    let poolVolatilitySnapshots = getContext<
-        Writable<PoolVolatilitiesSnapshot[]>
-    >("poolVolatilitySnapshots");
+    let poolVolatilitySnapshots =
+    getContext<Writable<PoolVolatilitiesSnapshot[]>>
+    ("poolVolatilitySnapshots");
+    let poolImpermanentLossSnapshots = 
+    getContext<Writable<ImpermanentLossSnapshot[]>>
+    ("poolImpermanentLossSnapshots");
     let lpRegistry = getContext<Writable<LPRegistry>>("lpRegistry");
 
     $: [usdtTokenVolumes, usdcTokenVolumes, ethTokenVolumes] =
@@ -89,6 +95,21 @@
         ?.averageVariance;
     $: ETH_USDC_last24HoursVolatilityVariance = [...usdcPoolVolatilitySnapshots].pop()
         ?.averageVariance;
+
+    $: [usdtImpermanentLossSnapshots, usdcImpermanentLossSnapshots] =
+        splitPoolImpermanentLossSnapshots($poolImpermanentLossSnapshots);
+
+    $: usdtImpermanentLossDataSeries = {
+        name: "ETH-USDT",
+        type: "line",
+        data: applyRatio(aggregateImpermanentLossChartData(usdtImpermanentLossSnapshots), 1),
+    };
+
+    $: usdcImpermanentLossDataSeries = {
+        name: "ETH-USDT",
+        type: "line",
+        data: applyRatio(aggregateImpermanentLossChartData(usdcImpermanentLossSnapshots), 1),
+    };
 
     $: usdtTvlDataSeries = {
         name: "ETH-USDT",
@@ -184,6 +205,7 @@
     $: tvlSeries = [usdtTvlDataSeries, usdcTvlDataSeries];
     $: liquiditySeries = [usdtLiquidityDataSeries, usdcLiquidityDataSeries];
     // $: volumeSeries = [usdtVolumeSeries, usdcVolumeSeries, ethVolumeSeries];
+    $: impermanentLossSeries = [usdtImpermanentLossDataSeries, usdcImpermanentLossDataSeries];
     $: volatilitySeries = [usdtVolatilitySeries, usdcVolatilitySeries];
     $: volatilityATRSeries = [usdtVolatilityATRSeries, usdcVolatilityATRSeries];
     $: volatilityVarianceSeries = [usdtVolatilityVarianceSeries, usdcVolatilityVarianceSeries];
@@ -279,6 +301,13 @@
                         yaxisTitle="Liquidity (ETH)"
                         xaxisTitle="Date"
                         dataSeries={liquiditySeries} />
+                {/if}
+                {#if impermanentLossSeries != undefined}
+                    <TemporalChart 
+                        title="Impermanent Loss"
+                        yaxisTitle="Impermanent Loss (USD)"
+                        xaxisTitle="Date"
+                        dataSeries={impermanentLossSeries} />
                 {/if}
                 {#if volatilitySeries != undefined}
                     <TemporalChart 

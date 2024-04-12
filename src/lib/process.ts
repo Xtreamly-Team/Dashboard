@@ -1,4 +1,4 @@
-import { PoolVolatilitiesSnapshot, type AggregatedSlippageAmount, type LPRegistry, type LPSnapshot, type SwapTransaction, TokenVolumesSnapshot } from "./models";
+import { PoolVolatilitiesSnapshot, type AggregatedSlippageAmount, type LPRegistry, type LPSnapshot, type SwapTransaction, TokenVolumesSnapshot, ImpermanentLossSnapshot } from "./models";
 import { LP_USDC, LP_USDT, StableCoins, timestampToDate, truncateNumber } from "./utils";
 
 export const applyRatio = (data, ratio) => {
@@ -121,6 +121,38 @@ export function calculateAggregateLiquidity(lpRegistry: LPRegistry) {
     }
     return aggregateLiquidity
 }
+
+export function calculateAggregateImpermanentLoss(poolImpermanentLossSnapshots: ImpermanentLossSnapshot[]): number[] {
+    let aggregateLosses = new Array(poolImpermanentLossSnapshots.length).fill(0);
+
+    poolImpermanentLossSnapshots.forEach((snapshot, i) => {
+        const losses = Object.values(snapshot.losses)
+        const aggregateLoss = losses.reduce((acc, loss) => acc + loss, 0)
+        aggregateLosses[i] = aggregateLoss
+    })
+
+    return aggregateLosses
+}
+
+export function aggregateImpermanentLossChartData(poolImpermanentLossSnapshots: ImpermanentLossSnapshot[]) {
+    let data: { x: Date; y: number; }[] = [];
+    let aggregateImpermanentLoss = calculateAggregateImpermanentLoss(poolImpermanentLossSnapshots)
+    if (!aggregateImpermanentLoss) {
+        return []
+    }
+    if (aggregateImpermanentLoss.length == 0) {
+        return []
+    }
+
+    poolImpermanentLossSnapshots.forEach((snapshot, i) => {
+        data.push({
+            x: timestampToDate(snapshot.endTimestamp / 1000),
+            y: aggregateImpermanentLoss[i],
+        });
+    })
+    return data
+}
+
 export function liquidityChartData(lpRegistry: LPRegistry) {
     let data = [];
     let aggregateLiquidity = calculateAggregateLiquidity(lpRegistry)
@@ -144,9 +176,6 @@ export function liquidityChartData(lpRegistry: LPRegistry) {
 export function tvlChartData(lpRegistry: LPRegistry) {
     let data = [];
     let aggregateTVL = calculateAggregateTVL(lpRegistry)
-    console.log(lpRegistry)
-    console.log("TVC CHART DATA")
-    console.log(aggregateTVL)
     if (!aggregateTVL) {
         return []
     }
@@ -245,7 +274,7 @@ export function getTokenVolumeData(volumeSnapshots: TokenVolumesSnapshot[]) {
 
 export function splitLPRegistry(lpRegistry: LPRegistry) {
     const usdtRegistry: LPRegistry = {}
-    const usdcRegistry:LPRegistry = {}
+    const usdcRegistry: LPRegistry = {}
     for (const address in lpRegistry) {
         if (LP_USDT.includes(address.toLowerCase())) {
             usdtRegistry[address] = lpRegistry[address]
@@ -255,7 +284,7 @@ export function splitLPRegistry(lpRegistry: LPRegistry) {
         }
 
     }
-    const res = [ usdtRegistry, usdcRegistry ]
+    const res = [usdtRegistry, usdcRegistry]
     console.log("Returning result")
     console.log(res)
     return res
@@ -270,7 +299,24 @@ export function splitPoolVolatilitySnapshots(poolVolatilitySnapshots: PoolVolati
         usdtSnapshots.push(new PoolVolatilitiesSnapshot(snapshot.timestamp, usdtPoolVolatilities))
         usdcSnapshots.push(new PoolVolatilitiesSnapshot(snapshot.timestamp, usdcPoolVolatilities))
     }
-    const res = [ usdtSnapshots, usdcSnapshots ]
+    const res = [usdtSnapshots, usdcSnapshots]
+    return res
+}
+
+export function splitPoolImpermanentLossSnapshots(poolImpermanentLossSnapshots: ImpermanentLossSnapshot[]) {
+    const usdtSnapshots: ImpermanentLossSnapshot[] = []
+    const usdcSnapshots: ImpermanentLossSnapshot[] = []
+    for (const snapshot of poolImpermanentLossSnapshots) {
+        const usdtPoolLosses = Object.fromEntries(Object.entries(snapshot.losses).filter(([key, value]) => LP_USDT.includes(key.toLowerCase())))
+        const usdcPoolLosses = Object.fromEntries(Object.entries(snapshot.losses).filter(([key, value]) => LP_USDC.includes(key.toLowerCase())))
+        usdtSnapshots.push(new ImpermanentLossSnapshot(usdtPoolLosses, snapshot.startTimestamp, snapshot.endTimestamp))
+        usdcSnapshots.push(new ImpermanentLossSnapshot(usdcPoolLosses, snapshot.startTimestamp, snapshot.endTimestamp))
+        // const usdtPoolVolatilities = snapshot.poolVolatilities.filter((poolVolatility) => LP_USDT.includes(poolVolatility.poolAddress.toLowerCase()))
+        // const usdcPoolVolatilities = snapshot.poolVolatilities.filter((poolVolatility) => LP_USDC.includes(poolVolatility.poolAddress.toLowerCase()))
+        // usdtSnapshots.push(new PoolVolatilitiesSnapshot(snapshot.timestamp, usdtPoolVolatilities))
+        // usdcSnapshots.push(new PoolVolatilitiesSnapshot(snapshot.timestamp, usdcPoolVolatilities))
+    }
+    const res = [usdtSnapshots, usdcSnapshots]
     return res
 }
 
@@ -286,6 +332,6 @@ export function splitTokenVolumeSnapshots(tokenVolumeSnapshots: TokenVolumesSnap
         usdcSnapshots.push(new TokenVolumesSnapshot(snapshot.timestamp, usdcTokenVolumes))
         ethSnapshots.push(new TokenVolumesSnapshot(snapshot.timestamp, ethTokenVolumes))
     }
-    const res = [ usdtSnapshots, usdcSnapshots, ethSnapshots ]
+    const res = [usdtSnapshots, usdcSnapshots, ethSnapshots]
     return res
 }

@@ -400,73 +400,20 @@ export class LPSnapshot {
 
 export type LPRegistry = Record<string, LPSnapshot[]>;
 
+export class ImpermanentLossSnapshot {
+    constructor(
+        public losses: Record<string, number>,
+        public startTimestamp: number,
+        public endTimestamp: number,
+    ) {}
 
+    static fromServerResponse(serverResponse: any, startTimestamp: number, endTimestamp: number): ImpermanentLossSnapshot {
+        const losses: Record<string, number> = {};
+        for (const poolLost of serverResponse) {
+            losses[poolLost['poolAddress']] = poolLost['impermanentLost'];
+        }
 
-// export class LiquidityProviderReport {
-//     constructor(
-//         public owner: string,
-//         public totalPositonMinted: number,
-//         public totalPositionBurned: number,
-//         public totalToken0Minted: number,
-//         public totalToken1Minted: number,
-//         public totalToken0MintedUSD: number,
-//         public totalToken1MintedUSD: number,
-//         public totalToken0Burned: number,
-//         public totalToken1Burned: number,
-//         public totalToken0BurnedUSD: number,
-//         public totalToken1BurnedUSD: number,
-//         public totalToken0Collected: number,
-//         public totalToken1Collected: number,
-//         public totalToken0CollectedUSD: number,
-//         public totalToken1CollectedUSD: number,
-//         public timestampStart: number,
-//         public timestampEnd: number,
-//     ) { }
-//
-//     public getToken0Price() {
-//         if (this.totalToken0Minted === 0) {
-//             return 0
-//         }
-//
-//     }
-//
-//     public getNetInflowUSD() {
-//         return this.totalToken0MintedUSD + this.totalToken1MintedUSD - this.totalToken0BurnedUSD - this.totalToken1BurnedUSD
-//     }
-//
-//     public getNetInflowToken0() {
-//         return this.totalToken0Minted - this.totalToken0Burned
-//     }
-//
-//     public getNetInflowToken1() {
-//         return this.totalToken1Minted - this.totalToken1Burned
-//     }
-//
-//     public getCurrentValue() {
-//         const currentToken1 = this.getNetInflowToken1() 
-//         const currentToken0 = this.getNetInflowToken0() 
-//     }
-//
-//     static fromServerResponse(serverResponse: any): LiquidityProviderReport {
-//         const report = serverResponse['report']
-//         return new LiquidityProviderReport(
-//             serverResponse['owner'],
-//             report['totalPositionMinted'],
-//             report['totalPositionBurned'],
-//             report['totalToken0Minted'],
-//             report['totalToken1Minted'],
-//             report['totalToken0MintedUSD'],
-//             report['totalToken1MintedUSD'],
-//             report['totalToken0Burned'],
-//             report['totalToken1Burned'],
-//             report['totalToken0BurnedUSD'],
-//             report['totalToken1BurnedUSD'],
-//             report['totalToken0Collected'],
-//             report['totalToken1Collected'],
-//             report['totalToken0CollectedUSD'],
-//             report['totalToken1CollectedUSD'],
-//             report['timestampStart'],
-//             report['timestampEnd'],
-//         )
-//     }
-// }
+        return new ImpermanentLossSnapshot(losses, startTimestamp, endTimestamp);
+        
+    }
+}
