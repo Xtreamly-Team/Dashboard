@@ -1,4 +1,4 @@
-import { AggregatedSlippageAmount, ImpermanentLossSnapshot, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
+import { AggregatedSlippageAmount, ImpermanentLossSnapshot, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, PoolVolume, PoolVolumeSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
 import { StableCoins, getBlockIntervals, getTradingSymbol } from "./utils";
 import { HubConnectionBuilder } from '@microsoft/signalr'
 
@@ -24,7 +24,7 @@ export async function getSwapTransactions(from: number = 0, to: number = 0, limi
     const response = await fetch(`${requestUrl}?${queryParams}`);
 
     const rawRes = await response.json();
-    console.log(rawRes[0])
+    // console.log(rawRes[0])
     const swapTransactions = SwapTransaction.fromServerResponse(rawRes);
 
     return swapTransactions
@@ -117,6 +117,24 @@ export async function getVolumeForAllTokens(intervals: number[]): Promise<TokenV
     return volumes
 }
 
+export async function getVolumeForAllPools(intervals: number[]): Promise<PoolVolumeSnapshot[]> {
+    let volumes: PoolVolumeSnapshot[] = [];
+    let requestUrl = `${API_URL}/Volume/GetVolumeForAllPools`
+    for (let i = 0; i < intervals.length - 1; i++) {
+        let queryParams = new URLSearchParams({
+            start: `${intervals[i]}`,
+            end: `${intervals[i + 1]}`,
+        })
+        const response = await fetch(`${requestUrl}?${queryParams}`);
+        const rawRes = await response.json();
+        volumes.push(
+            new PoolVolumeSnapshot(intervals[i],
+                PoolVolume.fromServerResponse(rawRes)));
+    }
+
+    return volumes
+}
+
 export async function getPoolsForTokenPair(tokenPair: TokenPair): Promise<LP[]> {
     let pools: LP[] = [];
     let requestUrl = `${API_URL}/Utilities/GetPoolForTokens`
@@ -183,7 +201,7 @@ export async function getLPInfoWithBlock(lp: LP, blockNumber: number): Promise<L
 
 export async function getLPInfosForBlockNumbers(lp: LP, blockNumbers: number[]): Promise<LPSnapshot[]> {
     const lpInfoInterval = await Promise.all(blockNumbers.map(async (blockNumber) => {
-        console.log(`Getting LP info for block ${blockNumber}`)
+        // console.log(`Getting LP info for block ${blockNumber}`)
         return await getLPInfoWithBlock(lp, blockNumber);
     }))
     return lpInfoInterval
@@ -295,6 +313,6 @@ export async function predictSlippageForSwaps(transactionHashes: string[]): Prom
         }
     });
     const rawRes = await response.json();
-    console.log(Object.keys(rawRes).length)
+    // console.log(Object.keys(rawRes).length)
     return rawRes
 }

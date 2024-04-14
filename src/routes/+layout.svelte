@@ -24,6 +24,7 @@
         getSwapTransactions,
         getSwapsCount,
         getVolatilityForIntervals,
+        getVolumeForAllPools,
         getVolumeForAllTokens,
         predictSlippageForSwaps,
     } from "$lib/api";
@@ -54,7 +55,6 @@
     onMount(async () => {
 
         let pastWeekIntervals = getPreviousDaysStart(7);
-        console.log(pastWeekIntervals)
         // pastWeekIntervals = pastWeekIntervals.slice(0, -1);
         // console.log(pastWeekIntervals)
         const pastWeekBlockIntervals =
@@ -74,14 +74,15 @@
         const currentDayStart = pastWeekIntervals.at(-1)!;
         const currentTime = getCurrentTime();
 
-        console.log("Start")
+        console.log("Loading Start")
+        // console.log(pastWeekIntervals)
 
         const currentBlockForMev = await getBlockForTimestamp(currentTime)
 
         // TODO: Fix after mev transactions are available
         const currentDayStartBlock = await getBlockForTimestamp(pastWeekIntervals.at(-6)!)
 
-        console.log(currentBlockForMev, currentDayStartBlock)
+        // console.log(currentBlockForMev, currentDayStartBlock)
 
         let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlockForMev, 1000)
 
@@ -115,6 +116,13 @@
             numberOfTransactions,
         );
 
+        let poolVolumeSnapshots = await getVolumeForAllPools(
+            pastWeekIntervals,
+        );
+
+        console.log(poolVolumeSnapshots)
+
+
         // // We're only considering transactions that deal with universal router directly
         // const universalTransactions = transactions.filter(
         //     (transaction) => transaction.thresholdPercentage,
@@ -124,7 +132,7 @@
 
         const slippages = await predictSlippageForSwaps(transactions.map((t) => t.id));
 
-        console.log(slippages)
+        // console.log(slippages)
         //
         for (const transaction of transactions) {
             const id = transaction.id
@@ -133,12 +141,6 @@
             }
         }
         swapTransactionsStore.set(transactions);
-
-
-
-
-    
-
 
 
         let impermanentLossData = await getImpermanentLoss(
@@ -158,8 +160,6 @@
             pastWeekIntervals,
         );
 
-        loading = false;
-        return
 
         tokenVolumesSnapshotsStore.set(volumes);
         //
@@ -172,7 +172,9 @@
         poolVolatilitySnapshotsStore.set(volatilities);
         // // console.log(volatilities)
         //
-        // console.log("End")
+        console.log("Loading End")
+        loading = false;
+        return
 
 
     });

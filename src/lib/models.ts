@@ -306,6 +306,25 @@ export class TokenVolume {
 
 }
 
+export class PoolVolumeSnapshot {
+    constructor(
+        public timestamp: number,
+        public poolVolumes: PoolVolume[],
+    ) {}
+}
+
+export class PoolVolume {
+    constructor(
+    public volumeIn: number,
+    public volumeOut: number,
+    ) {}
+
+    static fromServerResponse(serverResponse: any): PoolVolume[] {
+        console.log(serverResponse)
+        return []
+    }
+}
+
 export class PoolVolatilitiesSnapshot {
     constructor(
         public timestamp: number,
