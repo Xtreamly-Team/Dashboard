@@ -1,8 +1,5 @@
 <script lang="ts">
-    import {
-        SwapTransaction,
-        SwapTransactionTableModel,
-    } from "$lib/models";
+    import { SwapTransaction, SwapTransactionTableModel } from "$lib/models";
     import { truncateString, truncateNumber } from "$lib/utils";
     import LastRange from "$lib/components/LastRange.svelte";
     import {
@@ -24,7 +21,7 @@
 
     export let swapTransactions: SwapTransaction[] = [];
     $: thresholdTransactionsRaw = swapTransactions.filter(
-        (transaction) => transaction.thresholdPercentage
+        (transaction) => transaction.thresholdPercentage,
     );
     $: headers = SwapTransactionTableModel.headers();
     $: transactions = swapTransactions
@@ -92,6 +89,11 @@
                         >{truncateNumber(
                             transaction.slippagePercentage,
                         )}</TableBodyCell
+                    >
+                    <TableBodyCell class="font-normal"
+                        >{transaction.predictedSlippage
+                            ? truncateNumber(transaction.predictedSlippage)
+                            : 'NA'}</TableBodyCell
                     >
                     <TableBodyCell class="font-normal"
                         >{truncateNumber(

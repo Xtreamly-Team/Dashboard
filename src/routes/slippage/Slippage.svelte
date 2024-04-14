@@ -4,13 +4,19 @@
     import FactColumnItem from "$lib/components/dashboard/FactColumnItem.svelte";
     import PieChart from "$lib/components/dashboard/PieChart.svelte";
     import TemporalChart from "$lib/components/dashboard/TemporalChart.svelte";
+    import XyChart from "$lib/components/dashboard/XYChart.svelte";
     import { AggregatedSlippageAmount, PoolVolatilitiesSnapshot, SwapTransaction, TokenVolumesSnapshot, type LPRegistry } from "$lib/models";
     import { slippageChartData } from "$lib/process";
+    import { truncateNumber } from "$lib/utils";
     import { getContext } from "svelte";
     import type { Writable } from "svelte/store";
 
     let swapTransactions =
  getContext<Writable<SwapTransaction[]>>("swapTransactions");
+    const universalTransactions = $swapTransactions.filter(
+        (transaction) => transaction.thresholdPercentage,
+    );
+
     let slippageCount = getContext<Writable<number[]>>("slippageCount");
     let aggregatedSlippages = getContext<Writable<AggregatedSlippageAmount[]>>(
         "aggregatedSlippages",
@@ -66,6 +72,22 @@
         ),
     ];
 
+    $: slippageToThresholdScatteredData = universalTransactions.map((transaction) => {
+        return {
+            x: transaction.thresholdPercentage,
+            y: transaction.slippageAmount,
+        };
+    });
+
+    // TODO: Remove out of band data
+    $: slippageToThresholdScatteredSeries = {
+        name: "Slippage Percentage",
+        type: "scatter",
+        data: slippageToThresholdScatteredData,
+    };
+
+    const slippageThresholdFormatter = (value: number) => `${truncateNumber(value, 1)}%`;
+
 </script>
 
 <DataCard title="Slippage">
@@ -115,6 +137,15 @@
                         title="Slippage Distribution"
                         dataSeries={slippagePieChartData}
                         labels={["Positive Slippage", "Negative Slippage"]}
+                    />
+                {/if}
+                {#if slippageToThresholdScatteredData.length}
+                    <XyChart
+                      dataSeries={[slippageToThresholdScatteredSeries]}
+                        title="Slippage to Threshold"
+                        yaxisTitle="Actual Percentage (%)"
+                        xaxisTitle="Slippage Tolerance (%)"
+                        y_formatter={slippageThresholdFormatter}
                     />
                 {/if}
             </div>

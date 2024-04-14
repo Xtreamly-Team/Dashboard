@@ -109,3 +109,16 @@ export async function getBlockIntervals(intervals: number[]) {
     let blockNumbers = await Promise.all(intervals.map(async (interval) => { return getBlockForTimestamp(interval) }))
     return blockNumbers
 }
+
+
+export const CEXEquivalentSymbols: Record<string, string> = {
+    'WETH': 'ETH',
+    'WBTC': 'BTC',
+    'USDT': 'USDT',
+    'USDC': 'USDC'
+}
+
+
+export function getTradingSymbol(baseSymbol: string, quoteSymbol: string) {
+    return `${CEXEquivalentSymbols[baseSymbol]}-${CEXEquivalentSymbols[quoteSymbol]}`
+}

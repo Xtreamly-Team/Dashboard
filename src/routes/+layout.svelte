@@ -25,6 +25,7 @@
         getSwapsCount,
         getVolatilityForIntervals,
         getVolumeForAllTokens,
+        predictSlippageForSwaps,
     } from "$lib/api";
     import {
         getBlockIntervals,
@@ -35,6 +36,9 @@
         timestampToDate,
     } from "$lib/utils";
     import { TokenPair, AggregatedSlippageAmount, LPSnapshot, type LPRegistry } from "$lib/models";
+    import Loading from "$lib/pages/Loading.svelte";
+
+    let loading = true;
 
     let drawerHidden = true;
     setContext("swapTransactions", swapTransactionsStore);
@@ -57,7 +61,7 @@
             await getBlockIntervals(pastWeekIntervals);
         const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals);
 
-        // const pastMonthIntervals = getPreviousDaysStart(3);
+        const pastMonthIntervals = getPreviousDaysStart(30);
         // const pastMonthblockIntervals =
         //     await getBlockIntervals(pastMonthIntervals);
         // const pastMonthIntervalDays = getIntervalDates(pastMonthIntervals);
@@ -67,17 +71,19 @@
         slippageCountStore.set(numberOfSlippages)
 
         // TODO: Fix to -1 after we have enough data
-        const currentDayStart = pastWeekIntervals.at(-4)!;
+        const currentDayStart = pastWeekIntervals.at(-1)!;
         const currentTime = getCurrentTime();
 
         console.log("Start")
 
-        const currentBlock = await getBlockForTimestamp(currentTime)
-        const currentDayStartBlock = await getBlockForTimestamp(currentDayStart)
+        const currentBlockForMev = await getBlockForTimestamp(currentTime)
 
-        console.log(currentBlock, currentDayStartBlock)
+        // TODO: Fix after mev transactions are available
+        const currentDayStartBlock = await getBlockForTimestamp(pastWeekIntervals.at(-6)!)
 
-        let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlock, 5000)
+        console.log(currentBlockForMev, currentDayStartBlock)
+
+        let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlockForMev, 1000)
 
         // console.log(mevTransactions)
 
@@ -109,7 +115,31 @@
             numberOfTransactions,
         );
 
+        // // We're only considering transactions that deal with universal router directly
+        // const universalTransactions = transactions.filter(
+        //     (transaction) => transaction.thresholdPercentage,
+        // );
+
+        // console.log(universalTransactions.length)
+
+        const slippages = await predictSlippageForSwaps(transactions.map((t) => t.id));
+
+        console.log(slippages)
+        //
+        for (const transaction of transactions) {
+            const id = transaction.id
+            if (Object.keys(slippages).includes(id)) {
+                transaction.predictedSlippage = slippages[id]
+            }
+        }
         swapTransactionsStore.set(transactions);
+
+
+
+
+    
+
+
 
         let impermanentLossData = await getImpermanentLoss(
             pastWeekIntervals,
@@ -127,6 +157,9 @@
         const volumes = await getVolumeForAllTokens(
             pastWeekIntervals,
         );
+
+        loading = false;
+        return
 
         tokenVolumesSnapshotsStore.set(volumes);
         //
@@ -150,9 +183,13 @@
 >
     <Navbar bind:drawerHidden />
 </header>
+{#if loading}
+    <Loading/>
+{:else}
 <div class="overflow-hidden lg:flex">
     <Sidebar bind:drawerHidden />
     <div class="relative h-full w-full overflow-y-auto lg:ml-64">
         <slot />
     </div>
 </div>
+{/if}

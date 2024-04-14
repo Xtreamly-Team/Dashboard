@@ -1,11 +1,16 @@
-import { getBlockTimestamp } from "$lib/api";
+import { getBlockTimestamp, } from "$lib/api";
 import { StableCoins } from "$lib/utils";
 
 export class SwapTransaction {
     constructor(
+        public id: string,
         public hash: string,
         public timestamp: number,
         public blockNumber: number,
+        public tokenInAddress: string,
+        public tokenOutAddress: string,
+        public tokenInDecimal: number,
+        public tokenOutDecimal: number,
         public tokenInSymbol: string,
         public tokenOutSymbol: string,
         public amountIn: number,
@@ -16,6 +21,7 @@ export class SwapTransaction {
         public executedAmountOut: number,
         public poolFee: number,
         public gasFee: number,
+        public predictedSlippage: number | undefined,
         public thresholdPercentage?: number,
     ) { }
 
@@ -35,28 +41,35 @@ export class SwapTransaction {
     }
 
     static fromServerResponse(response: any): SwapTransaction[] {
-        const swaps = response.map((swap: any) => swap['uniswapSwap'])
+        // const swaps = response.map((swap: any) => swap['uniswapSwap'])
         const swapTransactions: SwapTransaction[] = []
-        swaps.forEach((swap: any) => {
+        response.forEach((swap: any) => {
             swapTransactions.push(new SwapTransaction(
-                swap['hash'],
-                swap['timestamp'],
-                swap['blockNumber'],
-                swap['tokenInSymbol'],
-                swap['tokenOutSymbol'],
-                swap['amountIn'],
-                swap['quotedPrice'],
-                swap['priceImpact'],
-                swap['priceImpactPercentage'],
-                swap['quotedAmountOut'],
-                swap['executedAmountOut'],
-                swap['poolFee'],
-                swap['gasPrice'],
-                swap['metaData'] ? +swap['metaData'][0] : undefined,
+                swap['_id'],
+                swap['uniswapSwap']['hash'],
+                swap['uniswapSwap']['timestamp'],
+                swap['uniswapSwap']['blockNumber'],
+                swap['uniswapSwap']['addressIn'],
+                swap['uniswapSwap']['addressOut'],
+                swap['uniswapSwap']['tokenInDecimal'],
+                swap['uniswapSwap']['tokenOutDecimal'],
+                swap['uniswapSwap']['tokenInSymbol'],
+                swap['uniswapSwap']['tokenOutSymbol'],
+                swap['uniswapSwap']['amountIn'],
+                swap['uniswapSwap']['quotedPrice'],
+                swap['uniswapSwap']['priceImpact'],
+                swap['uniswapSwap']['priceImpactPercentage'],
+                swap['uniswapSwap']['quotedAmountOut'],
+                swap['uniswapSwap']['executedAmountOut'],
+                swap['uniswapSwap']['poolFee'],
+                swap['uniswapSwap']['gasPrice'],
+                undefined,
+                swap['uniswapSwap']['metaData'] ? +swap['uniswapSwap']['metaData'][0] : undefined,
             ))
         })
         return swapTransactions;
     }
+
 }
 
 
@@ -74,6 +87,7 @@ export class SwapTransactionTableModel {
         public gasFee: number,
         public slippage: number,
         public slippagePercentage: number,
+        public predictedSlippage: number | undefined,
         public priceImpact: number,
         public thresholdPercentage?: number,
     ) { }
@@ -95,6 +109,7 @@ export class SwapTransactionTableModel {
             'Gas Fee',
             'Slippage (USD)',
             'Slippage (%)',
+            'Predicted Slippage (%)',
             'Threshold (%)',
             'Price Impact (%)',
         ];
@@ -113,6 +128,7 @@ export class SwapTransactionTableModel {
             swapTransaction.gasFee,
             swapTransaction.slippageAmount,
             swapTransaction.slippagePercentage,
+            swapTransaction.predictedSlippage,
             swapTransaction.priceImpactPercentage,
             swapTransaction.thresholdPercentage,
         );

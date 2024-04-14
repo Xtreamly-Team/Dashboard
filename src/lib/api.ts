@@ -1,9 +1,15 @@
 import { AggregatedSlippageAmount, ImpermanentLossSnapshot, LP, LPInfo, LPSnapshot, MEVTransactions, PoolVolatilitiesSnapshot, SwapTransaction, TokenPair, TokenVolume, TokenVolumesSnapshot } from "./models";
-import { getBlockIntervals } from "./utils";
+import { StableCoins, getBlockIntervals, getTradingSymbol } from "./utils";
 import { HubConnectionBuilder } from '@microsoft/signalr'
 
 const SERVER_HOST = 'https://test.xtreamly.io:5000';
 const API_URL = `${SERVER_HOST}/api/v1`;
+// export const PUBLIC_SERVER_URL = 'https://api.xtreamly.io'
+// export const PUBLIC_TEST_API_BETA_KEY = 'lKFdfPEe3xaW5nq1rPNMNaQtrI0ffTmIUhU6SMAa'
+// export const QuotePriceAPIUrl = `${PUBLIC_SERVER_URL}/quoted_price_gas_fee_pool_address`
+
+// export const PREDICT_SLIPPAGE_API_URL = `${PUBLIC_SERVER_URL}/predict_slippage`
+
 
 export async function getSwapTransactions(from: number = 0, to: number = 0, limit: number = 10):
     Promise<SwapTransaction[]> {
@@ -18,7 +24,9 @@ export async function getSwapTransactions(from: number = 0, to: number = 0, limi
     const response = await fetch(`${requestUrl}?${queryParams}`);
 
     const rawRes = await response.json();
+    console.log(rawRes[0])
     const swapTransactions = SwapTransaction.fromServerResponse(rawRes);
+
     return swapTransactions
 }
 
@@ -173,21 +181,6 @@ export async function getLPInfoWithBlock(lp: LP, blockNumber: number): Promise<L
     return newLPSnapshot
 }
 
-// Not useful for now
-// export async function getLPInfoWithinInterval(lp: LP, from: number, to: number): Promise<LPSnapshot> {
-//     let requestUrl = `${API_URL}/LpInfo/GetLpInfoForTime`
-//     let queryParams = new URLSearchParams({
-//         poolAddress: lp.address,
-//         start: `${from}`,
-//         end: `${to}`
-//     })
-//
-//     const response = await fetch(`${requestUrl}?${queryParams}`);
-//
-//     const rawRes = await response.json();
-//     return lp
-// }
-
 export async function getLPInfosForBlockNumbers(lp: LP, blockNumbers: number[]): Promise<LPSnapshot[]> {
     const lpInfoInterval = await Promise.all(blockNumbers.map(async (blockNumber) => {
         console.log(`Getting LP info for block ${blockNumber}`)
@@ -232,10 +225,6 @@ export async function getSwapsCount(intervals: number[]): Promise<number[]> {
         numbers.push(rawRes)
     }
     return numbers
-}
-
-export async function getImpermanentLossRaw(intervals: number[]): Promise<number[]> {
-    return []
 }
 
 export async function getImpermanentLoss(intervals: number[]): Promise<ImpermanentLossSnapshot[]> {
@@ -292,4 +281,20 @@ export async function startReceivingCeXonWebsocket(
 
         await onReceive(trades)
     });
+}
+
+
+export async function predictSlippageForSwaps(transactionHashes: string[]): Promise<Record<string, number>> {
+    const url = `${API_URL}/Slippage/CalculateHistoricalSlippage`
+    const body = JSON.stringify(transactionHashes)
+    const response = await fetch(url, {
+        method: 'POST',
+        body: body,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const rawRes = await response.json();
+    console.log(Object.keys(rawRes).length)
+    return rawRes
 }
