@@ -128,7 +128,9 @@ export async function getVolumeForAllPools(intervals: number[]): Promise<PoolVol
         const response = await fetch(`${requestUrl}?${queryParams}`);
         const rawRes = await response.json();
         volumes.push(
-            new PoolVolumeSnapshot(intervals[i],
+            new PoolVolumeSnapshot(
+                intervals[i],
+                intervals[i+1],
                 PoolVolume.fromServerResponse(rawRes)));
     }
 

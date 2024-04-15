@@ -1,4 +1,4 @@
-import { PoolVolatilitiesSnapshot, type AggregatedSlippageAmount, type LPRegistry, type LPSnapshot, type SwapTransaction, TokenVolumesSnapshot, ImpermanentLossSnapshot } from "./models";
+import { PoolVolatilitiesSnapshot, type AggregatedSlippageAmount, type LPRegistry, type LPSnapshot, type SwapTransaction, TokenVolumesSnapshot, ImpermanentLossSnapshot, PoolVolumeSnapshot } from "./models";
 import { LP_USDC, LP_USDT, StableCoins, timestampToDate, truncateNumber } from "./utils";
 
 export const applyRatio = (data, ratio) => {
@@ -334,4 +334,75 @@ export function splitTokenVolumeSnapshots(tokenVolumeSnapshots: TokenVolumesSnap
     }
     const res = [usdtSnapshots, usdcSnapshots, ethSnapshots]
     return res
+}
+
+export function slippagePercentageToVolumeChangeChartSeries(swapTransactions: SwapTransaction[], poolVolumeSnapshots: PoolVolumeSnapshot[]) {
+
+    console.log("Function called")
+    console.log(swapTransactions)
+    console.log(poolVolumeSnapshots)
+
+    const dataSeries: {name: string, type: string, data: {x: number, y: number}[]}[] = [
+        {
+            name: "ETH-USDT",
+            type: "scatter",
+            data: []
+        },
+        {
+            name: "ETH-USDC",
+            type: "scatter",
+            data: []
+        }
+    ]
+
+    for (let i = 0; i < poolVolumeSnapshots.length - 1; i++) {
+        const volumeSnapshot = poolVolumeSnapshots[i]
+        const nextVolumeSnapshot = poolVolumeSnapshots[i + 1]
+        console.log("Volume snapshot")
+        console.log(volumeSnapshot)
+        console.log(nextVolumeSnapshot)
+
+        const swapsTimeGrouped = swapTransactions.filter((swapTransaction) => swapTransaction.timestamp >= volumeSnapshot.startTimestamp && swapTransaction.timestamp < volumeSnapshot.endTimestamp)
+        console.log("Swaps time grouped")
+        console.log(swapsTimeGrouped)
+
+        const usdtSwaps = swapsTimeGrouped.filter((swap) => LP_USDT.includes(swap.poolAddress.toLowerCase()))
+        const usdcSwaps = swapsTimeGrouped.filter((swap) => LP_USDC.includes(swap.poolAddress.toLowerCase()))
+        console.log("usdtSwaps")
+        console.log(usdtSwaps)
+        console.log("usdcSwaps")
+        console.log(usdcSwaps)
+
+        const usdtSwapsAverageSlippage = (usdtSwaps.reduce((acc, swap) => acc + swap.slippagePercentage, 0)) / usdtSwaps.length
+        const usdcSwapsAverageSlippage = (usdcSwaps.reduce((acc, swap) => acc + swap.slippagePercentage, 0)) / usdcSwaps.length
+
+        const usdtPoolVolumes = volumeSnapshot.poolVolumes.filter((poolVolume) => LP_USDT.includes(poolVolume.poolAddress.toLowerCase()))
+        const usdcPoolVolumes = volumeSnapshot.poolVolumes.filter((poolVolume) => LP_USDC.includes(poolVolume.poolAddress.toLowerCase()))
+
+        const nextUsdtPoolVolumes = nextVolumeSnapshot.poolVolumes.filter((poolVolume) => LP_USDT.includes(poolVolume.poolAddress.toLowerCase()))
+        const nextUsdcPoolVolumes = nextVolumeSnapshot.poolVolumes.filter((poolVolume) => LP_USDC.includes(poolVolume.poolAddress.toLowerCase()))
+
+        const currentTotalUsdtPoolVolumeUSD = usdtPoolVolumes.reduce((acc, poolVolume) => acc + poolVolume.totalVolume, 0)
+        const nextTotalUsdtPoolVolumeUSD = nextUsdtPoolVolumes.reduce((acc, poolVolume) => acc + poolVolume.totalVolume, 0)
+        const currentTotalUsdcPoolVolumeUSD = usdcPoolVolumes.reduce((acc, poolVolume) => acc + poolVolume.totalVolume, 0)
+        const nextTotalUsdcPoolVolumeUSD = nextUsdcPoolVolumes.reduce((acc, poolVolume) => acc + poolVolume.totalVolume, 0)
+
+        const usdtVolumeChange = ((nextTotalUsdtPoolVolumeUSD - currentTotalUsdtPoolVolumeUSD) / currentTotalUsdtPoolVolumeUSD) * 100
+        const usdcVolumeChange = ((nextTotalUsdcPoolVolumeUSD - currentTotalUsdcPoolVolumeUSD) / currentTotalUsdcPoolVolumeUSD) * 100
+
+        dataSeries.find((series) => series.name === "ETH-USDT")?.data.push({
+            x: usdtSwapsAverageSlippage,
+            y: usdtVolumeChange
+        })
+
+        dataSeries.find((series) => series.name === "ETH-USDC")?.data.push({
+            x: usdcSwapsAverageSlippage,
+            y: usdcVolumeChange
+        })
+
+    }
+
+    console.log(dataSeries)
+
+    return dataSeries
 }

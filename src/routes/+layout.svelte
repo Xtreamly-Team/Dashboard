@@ -13,6 +13,7 @@
         slippageCountStore,
         mevTransactionsStore,
         poolImpermanentLossSnapshotsStore,
+        poolVolumeSnapshotsStore,
     } from "$lib/stores";
     import {
     getBlockForTimestamp,
@@ -48,6 +49,7 @@
     setContext("aggregatedSlippages", aggregatedSlippagesStore);
     setContext("tokenVolumesSnapshots", tokenVolumesSnapshotsStore);
     setContext("poolVolatilitySnapshots", poolVolatilitySnapshotsStore);
+    setContext("poolVolumeSnapshots", poolVolumeSnapshotsStore);
     setContext("poolImpermanentLossSnapshots", poolImpermanentLossSnapshotsStore);
     setContext("lpRegistry", lpRegistryStore);
 
@@ -56,7 +58,7 @@
 
         let pastWeekIntervals = getPreviousDaysStart(7);
         // pastWeekIntervals = pastWeekIntervals.slice(0, -1);
-        // console.log(pastWeekIntervals)
+        console.log(pastWeekIntervals)
         const pastWeekBlockIntervals =
             await getBlockIntervals(pastWeekIntervals);
         const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals);
@@ -107,20 +109,29 @@
 
         lpRegistryStore.set(lpRegistryRes)
         
-        const numberOfTransactions = 1000;
+        const numberOfTransactions = 5000;
 
         // WORKS
         let transactions = await getSwapTransactions(
-            currentDayStart,
+            currentTime - 3600 * 24,
             currentTime,
             numberOfTransactions,
         );
 
+        
+
+        // const currentBlock = await getBlockForTimestamp (getCurrentTime()) 
+        //
+        const last7Hours = new Array(7).fill(0).map((_, i) => currentTime - ((6 - i) * 3600))
+
+        console.log(last7Hours)
+
         let poolVolumeSnapshots = await getVolumeForAllPools(
-            pastWeekIntervals,
+            last7Hours
         );
 
         console.log(poolVolumeSnapshots)
+        poolVolumeSnapshotsStore.set(poolVolumeSnapshots);
 
 
         // // We're only considering transactions that deal with universal router directly
@@ -141,6 +152,9 @@
             }
         }
         swapTransactionsStore.set(transactions);
+
+        loading = false;
+        return
 
 
         let impermanentLossData = await getImpermanentLoss(
@@ -173,8 +187,6 @@
         // // console.log(volatilities)
         //
         console.log("Loading End")
-        loading = false;
-        return
 
 
     });

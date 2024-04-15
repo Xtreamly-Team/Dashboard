@@ -19,6 +19,7 @@ export class SwapTransaction {
         public priceImpactPercentage: number,
         public quotedAmountOut: number,
         public executedAmountOut: number,
+        public poolAddress: string,
         public poolFee: number,
         public gasFee: number,
         public predictedSlippage: number | undefined,
@@ -61,6 +62,7 @@ export class SwapTransaction {
                 swap['uniswapSwap']['priceImpactPercentage'],
                 swap['uniswapSwap']['quotedAmountOut'],
                 swap['uniswapSwap']['executedAmountOut'],
+                swap['uniswapSwap']['poolAddress'],
                 swap['uniswapSwap']['poolFee'],
                 swap['uniswapSwap']['gasPrice'],
                 undefined,
@@ -308,20 +310,42 @@ export class TokenVolume {
 
 export class PoolVolumeSnapshot {
     constructor(
-        public timestamp: number,
+        public startTimestamp: number,
+        public endTimestamp: number,
         public poolVolumes: PoolVolume[],
-    ) {}
+    ) { }
 }
 
 export class PoolVolume {
     constructor(
-    public volumeIn: number,
-    public volumeOut: number,
-    ) {}
+        public poolAddress: string,
+        public token0Address: string,
+        public token0Volume: number,
+        public token0VolumeUSD: number,
+        public token1Address: string,
+        public token1Volume: number,
+        public token1VolumeUSD: number,
+    ) { }
+
+    get totalVolume() {
+        return this.token0VolumeUSD + this.token1VolumeUSD;
+    }
 
     static fromServerResponse(serverResponse: any): PoolVolume[] {
         console.log(serverResponse)
-        return []
+        const volumes = []
+        for (const volume of serverResponse) {
+            volumes.push(new PoolVolume(
+                volume['poolAddress'],
+                volume['token0Address'],
+                volume['token0Volume'],
+                volume['token0VolumeUSDCurrent'],
+                volume['token1Address'],
+                volume['token1Volume'],
+                volume['token1VolumeUSDCurrent'],
+            ))
+        }
+        return volumes
     }
 }
 
@@ -440,7 +464,7 @@ export class ImpermanentLossSnapshot {
         public losses: Record<string, number>,
         public startTimestamp: number,
         public endTimestamp: number,
-    ) {}
+    ) { }
 
     static fromServerResponse(serverResponse: any, startTimestamp: number, endTimestamp: number): ImpermanentLossSnapshot {
         const losses: Record<string, number> = {};
@@ -449,6 +473,6 @@ export class ImpermanentLossSnapshot {
         }
 
         return new ImpermanentLossSnapshot(losses, startTimestamp, endTimestamp);
-        
+
     }
 }

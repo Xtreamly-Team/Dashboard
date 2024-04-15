@@ -134,30 +134,25 @@
         type: "line",
         data: applyRatio(liquidityChartData(registeries[1]), 0.000000001 * 0.000000001),
     };
-    // $: usdtVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
-    // $: usdcVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
-    // $: ethVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
-    //
-    // $: usdtVolumeSeries = {
-    //     name: "USDT",
-    //     type: "line",
-    //     data: applyRatio(usdtVolumeData, 0.001),
-    // };
-    // $: usdcVolumeSeries = {
-    //     name: "USDC",
-    //     type: "line",
-    //     data: applyRatio(usdcVolumeData, 0.001),
-    // };
-    // $: ethVolumeSeries = {
-    //     name: "ETH",
-    //     type: "line",
-    //     data: applyRatio(ethVolumeData, 0.001),
-    // };
-
-    // $: volatilityData = [
-    //     { x: "05/06/2014", y: 33 },
-    //     { x: "05/14/2014", y: 45 },
-    // ];
+    $: usdtVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
+    $: usdcVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
+    $: ethVolumeData = aggregateVolumeChartData(usdcTokenVolumes, "total");
+    
+    $: usdtVolumeSeries = {
+        name: "USDT",
+        type: "line",
+        data: applyRatio(usdtVolumeData, 0.001),
+    };
+    $: usdcVolumeSeries = {
+        name: "USDC",
+        type: "line",
+        data: applyRatio(usdcVolumeData, 0.001),
+    };
+    $: ethVolumeSeries = {
+        name: "ETH",
+        type: "line",
+        data: applyRatio(ethVolumeData, 0.001),
+    };
 
     $: usdtVolatilitySeries = {
         name: "ETH-USDT",
@@ -204,7 +199,7 @@
 
     $: tvlSeries = [usdtTvlDataSeries, usdcTvlDataSeries];
     $: liquiditySeries = [usdtLiquidityDataSeries, usdcLiquidityDataSeries];
-    // $: volumeSeries = [usdtVolumeSeries, usdcVolumeSeries, ethVolumeSeries];
+    $: volumeSeries = [usdtVolumeSeries, usdcVolumeSeries, ethVolumeSeries];
     $: impermanentLossSeries = [usdtImpermanentLossDataSeries, usdcImpermanentLossDataSeries];
     $: volatilitySeries = [usdtVolatilitySeries, usdcVolatilitySeries];
     $: volatilityATRSeries = [usdtVolatilityATRSeries, usdcVolatilityATRSeries];

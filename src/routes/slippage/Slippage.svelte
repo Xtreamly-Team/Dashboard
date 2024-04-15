@@ -5,8 +5,8 @@
     import PieChart from "$lib/components/dashboard/PieChart.svelte";
     import TemporalChart from "$lib/components/dashboard/TemporalChart.svelte";
     import XyChart from "$lib/components/dashboard/XYChart.svelte";
-    import { AggregatedSlippageAmount, PoolVolatilitiesSnapshot, SwapTransaction, TokenVolumesSnapshot, type LPRegistry } from "$lib/models";
-    import { slippageChartData } from "$lib/process";
+    import { AggregatedSlippageAmount, PoolVolatilitiesSnapshot, SwapTransaction, TokenVolumesSnapshot, type LPRegistry, PoolVolumeSnapshot } from "$lib/models";
+    import { slippageChartData, slippagePercentageToVolumeChangeChartSeries } from "$lib/process";
     import { truncateNumber } from "$lib/utils";
     import { getContext } from "svelte";
     import type { Writable } from "svelte/store";
@@ -27,6 +27,9 @@
     let poolVolatilitySnapshots = getContext<
         Writable<PoolVolatilitiesSnapshot[]>
     >("poolVolatilitySnapshots");
+    let poolVolumeSnapshots = getContext<
+        Writable<PoolVolumeSnapshot[]>
+    >("poolVolumeSnapshots");
     let lpRegistry = getContext<Writable<LPRegistry>>("lpRegistry");
 
     $: last24HoursPositiveSlippage = Math.floor(
@@ -88,6 +91,8 @@
 
     const slippageThresholdFormatter = (value: number) => `${truncateNumber(value, 1)}%`;
 
+    $: slippageToVolumeChangeChartSeries = slippagePercentageToVolumeChangeChartSeries($swapTransactions, $poolVolumeSnapshots)
+
 </script>
 
 <DataCard title="Slippage">
@@ -146,6 +151,14 @@
                         yaxisTitle="Actual Percentage (%)"
                         xaxisTitle="Slippage Tolerance (%)"
                         y_formatter={slippageThresholdFormatter}
+                    />
+                {/if}
+                {#if slippagePercentageToVolumeChangeChartSeries.length}
+                    <XyChart
+                        dataSeries={slippageToVolumeChangeChartSeries}
+                        title="Slippage to Volume Change"
+                        yaxisTitle="Slippage Percentage (%)"
+                        xaxisTitle="Volume Change (%)"
                     />
                 {/if}
             </div>
