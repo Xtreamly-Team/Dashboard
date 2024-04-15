@@ -338,9 +338,9 @@ export function splitTokenVolumeSnapshots(tokenVolumeSnapshots: TokenVolumesSnap
 
 export function slippagePercentageToVolumeChangeChartSeries(swapTransactions: SwapTransaction[], poolVolumeSnapshots: PoolVolumeSnapshot[]) {
 
-    console.log("Function called")
-    console.log(swapTransactions)
-    console.log(poolVolumeSnapshots)
+    // console.log("Function called")
+    // console.log(swapTransactions)
+    // console.log(poolVolumeSnapshots)
 
     const dataSeries: {name: string, type: string, data: {x: number, y: number}[]}[] = [
         {
@@ -358,20 +358,20 @@ export function slippagePercentageToVolumeChangeChartSeries(swapTransactions: Sw
     for (let i = 0; i < poolVolumeSnapshots.length - 1; i++) {
         const volumeSnapshot = poolVolumeSnapshots[i]
         const nextVolumeSnapshot = poolVolumeSnapshots[i + 1]
-        console.log("Volume snapshot")
-        console.log(volumeSnapshot)
-        console.log(nextVolumeSnapshot)
+        // console.log("Volume snapshot")
+        // console.log(volumeSnapshot)
+        // console.log(nextVolumeSnapshot)
 
         const swapsTimeGrouped = swapTransactions.filter((swapTransaction) => swapTransaction.timestamp >= volumeSnapshot.startTimestamp && swapTransaction.timestamp < volumeSnapshot.endTimestamp)
-        console.log("Swaps time grouped")
-        console.log(swapsTimeGrouped)
+        // console.log("Swaps time grouped")
+        // console.log(swapsTimeGrouped)
 
         const usdtSwaps = swapsTimeGrouped.filter((swap) => LP_USDT.includes(swap.poolAddress.toLowerCase()))
         const usdcSwaps = swapsTimeGrouped.filter((swap) => LP_USDC.includes(swap.poolAddress.toLowerCase()))
-        console.log("usdtSwaps")
-        console.log(usdtSwaps)
-        console.log("usdcSwaps")
-        console.log(usdcSwaps)
+        // console.log("usdtSwaps")
+        // console.log(usdtSwaps)
+        // console.log("usdcSwaps")
+        // console.log(usdcSwaps)
 
         const usdtSwapsAverageSlippage = (usdtSwaps.reduce((acc, swap) => acc + swap.slippagePercentage, 0)) / usdtSwaps.length
         const usdcSwapsAverageSlippage = (usdcSwaps.reduce((acc, swap) => acc + swap.slippagePercentage, 0)) / usdcSwaps.length
@@ -402,7 +402,7 @@ export function slippagePercentageToVolumeChangeChartSeries(swapTransactions: Sw
 
     }
 
-    console.log(dataSeries)
+    // console.log(dataSeries)
 
     return dataSeries
 }

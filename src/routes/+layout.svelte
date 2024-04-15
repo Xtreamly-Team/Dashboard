@@ -58,7 +58,7 @@
 
         let pastWeekIntervals = getPreviousDaysStart(7);
         // pastWeekIntervals = pastWeekIntervals.slice(0, -1);
-        console.log(pastWeekIntervals)
+        // console.log(pastWeekIntervals)
         const pastWeekBlockIntervals =
             await getBlockIntervals(pastWeekIntervals);
         const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals);
@@ -124,13 +124,13 @@
         //
         const last7Hours = new Array(7).fill(0).map((_, i) => currentTime - ((6 - i) * 3600))
 
-        console.log(last7Hours)
+        // console.log(last7Hours)
 
         let poolVolumeSnapshots = await getVolumeForAllPools(
             last7Hours
         );
 
-        console.log(poolVolumeSnapshots)
+        // console.log(poolVolumeSnapshots)
         poolVolumeSnapshotsStore.set(poolVolumeSnapshots);
 
 
@@ -153,8 +153,6 @@
         }
         swapTransactionsStore.set(transactions);
 
-        loading = false;
-        return
 
 
         let impermanentLossData = await getImpermanentLoss(
@@ -187,6 +185,8 @@
         // // console.log(volatilities)
         //
         console.log("Loading End")
+        loading = false;
+        return
 
 
     });
