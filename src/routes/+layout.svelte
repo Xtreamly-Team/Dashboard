@@ -54,136 +54,147 @@
     setContext("lpRegistry", lpRegistryStore);
 
     const [WETH, USDT, USDC, DAI] = getSupportedTokens();
-    onMount(async () => {
 
-        let pastWeekIntervals = getPreviousDaysStart(7);
-        // pastWeekIntervals = pastWeekIntervals.slice(0, -1);
-        // console.log(pastWeekIntervals)
-        const pastWeekBlockIntervals =
-            await getBlockIntervals(pastWeekIntervals);
-        const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals);
-
-        const pastMonthIntervals = getPreviousDaysStart(30);
-        // const pastMonthblockIntervals =
-        //     await getBlockIntervals(pastMonthIntervals);
-        // const pastMonthIntervalDays = getIntervalDates(pastMonthIntervals);
-
-
-        const numberOfSlippages = await getSwapsCount(pastWeekIntervals)
+    async function loadSlippages(intervals: number[]) {
+        const numberOfSlippages = await getSwapsCount(intervals)
         slippageCountStore.set(numberOfSlippages)
+    }
 
-        // TODO: Fix to -1 after we have enough data
-        const currentDayStart = pastWeekIntervals.at(-1)!;
-        const currentTime = getCurrentTime();
+    async function loadAggregatedSlippages(intervals: number[]) {
+        const aggregatedSlippageAmount =
+            await getSlippageAmountForIntervals(intervals);
 
-        console.log("Loading Start")
-        // console.log(pastWeekIntervals)
+        aggregatedSlippagesStore.set(aggregatedSlippageAmount);
+    }
 
-        const currentBlockForMev = await getBlockForTimestamp(currentTime)
-
-        // TODO: Fix after mev transactions are available
-        const currentDayStartBlock = await getBlockForTimestamp(pastWeekIntervals.at(-6)!)
-
-        // console.log(currentBlockForMev, currentDayStartBlock)
-
-        let mevTransactions = await getMEVTransactions(currentDayStartBlock,currentBlockForMev, 1000)
-
-        // console.log(mevTransactions)
+    async function loadMEV(currentBlock: number, startBlock: number) {
+        let mevTransactions = await getMEVTransactions(startBlock,currentBlock, 1000)
 
         mevTransactionsStore.set(mevTransactions)
+    }
 
-        let lps = [... await getPoolsForTokenPair(new TokenPair(WETH, USDT)),
-            ... await getPoolsForTokenPair(new TokenPair(WETH, USDC))] 
+    async function loadLPRegistery(pairs: TokenPair[], intervals: number[]) {
+
+        let lps = []
+
+        for (const pair of pairs) {
+            lps.push(... await getPoolsForTokenPair(pair))
+        }
 
         const lpRegistryRes: LPRegistry = {};
         for (const lp of lps) {
             const lpSnapshots: LPSnapshot[] = await getLPInfosForIntervals(
                 lp,
                 // NOTE: Is it true?
-                pastWeekIntervals.slice(1, )
+                intervals.slice(1, )
+                // pastWeekIntervals.slice(1, )
             );
             lpRegistryRes[lp.address] = lpSnapshots;
         }
 
-        // console.log(lpRegistryRes);
-
         lpRegistryStore.set(lpRegistryRes)
-        
-        const numberOfTransactions = 5000;
 
-        // WORKS
-        let transactions = await getSwapTransactions(
-            currentTime - 3600 * 24,
-            currentTime,
+    }
+
+    async function loadSwaps(startTime: number, endTime: number, numberOfTransactions: number) {
+        const swaps = await getSwapTransactions(
+            startTime,
+            endTime,
             numberOfTransactions,
         );
+        const slippages = await predictSlippageForSwaps(swaps.map((t) => t.id));
 
-        
-
-        // const currentBlock = await getBlockForTimestamp (getCurrentTime()) 
-        //
-        const last7Hours = new Array(7).fill(0).map((_, i) => currentTime - ((6 - i) * 3600))
-
-        // console.log(last7Hours)
-
-        let poolVolumeSnapshots = await getVolumeForAllPools(
-            last7Hours
-        );
-
-        // console.log(poolVolumeSnapshots)
-        poolVolumeSnapshotsStore.set(poolVolumeSnapshots);
-
-
-        // // We're only considering transactions that deal with universal router directly
-        // const universalTransactions = transactions.filter(
-        //     (transaction) => transaction.thresholdPercentage,
-        // );
-
-        // console.log(universalTransactions.length)
-
-        const slippages = await predictSlippageForSwaps(transactions.map((t) => t.id));
-
-        // console.log(slippages)
-        //
-        for (const transaction of transactions) {
+        for (const transaction of swaps) {
             const id = transaction.id
             if (Object.keys(slippages).includes(id)) {
                 transaction.predictedSlippage = slippages[id]
             }
         }
-        swapTransactionsStore.set(transactions);
 
+        swapTransactionsStore.set(swaps);
+    }
 
+    async function loadPoolVolumes(intervals: number[]) {
+        let poolVolumeSnapshots = await getVolumeForAllPools(
+            intervals,
+        );
 
+        poolVolumeSnapshotsStore.set(poolVolumeSnapshots);
+    }
+
+    async function loadAllTokenVolumes(intervals: number[]) {
+        let tokenVolumes = await getVolumeForAllTokens(
+            intervals,
+        );
+
+        tokenVolumesSnapshotsStore.set(tokenVolumes);
+    }
+
+    async function loadImpermanentLoss(intervals: number[]) {
         let impermanentLossData = await getImpermanentLoss(
-            pastWeekIntervals,
+            intervals,
         );
 
         poolImpermanentLossSnapshotsStore.set(impermanentLossData);
+    }
 
-        // // WORKS
-        const aggregatedSlippageAmount =
-            await getSlippageAmountForIntervals(pastWeekIntervals);
-
-        aggregatedSlippagesStore.set(aggregatedSlippageAmount);
-        //
-        // // WORKS
-        const volumes = await getVolumeForAllTokens(
-            pastWeekIntervals,
+    // NOTE: Heavy call, takes a while
+    async function loadVolatility(intervals: number[]) {
+        let volatilities = await getVolatilityForIntervals(
+            intervals,
         );
 
-
-        tokenVolumesSnapshotsStore.set(volumes);
-        //
-        // // // WORKS
-        // // // NOTE: Heavy call, takes a while
-        const volatilities = await getVolatilityForIntervals(
-            pastWeekIntervals,
-        );
-        //
         poolVolatilitySnapshotsStore.set(volatilities);
-        // // console.log(volatilities)
-        //
+    }
+
+    onMount(async () => {
+        loading = true;
+        console.log("Loading Start")
+
+        const numberOfSwapTransactionsToGet = 5000;
+        const currentTime = getCurrentTime()
+        const past24HoursTime = currentTime - 3600 * 24
+        const past7Hours = new Array(7).fill(0).map((_, i) => currentTime - ((6 - i) * 3600))
+        const currentBlockForMev = await getBlockForTimestamp(currentTime)
+        let pastWeekIntervals = getPreviousDaysStart(7)
+        // TODO: Fix after mev transactions are available
+        const currentDayStartBlock = await getBlockForTimestamp(pastWeekIntervals.at(-6)!)
+
+        const pastWeekBlockIntervals =
+            await getBlockIntervals(pastWeekIntervals)
+        const pastWeekIntervalDays = getIntervalDates(pastWeekIntervals)
+
+        const pastMonthIntervals = getPreviousDaysStart(30)
+
+        console.log("Loading Start")
+
+        const slippagePromise = loadSlippages(pastWeekIntervals);
+
+        const mevPromise = loadMEV(currentBlockForMev, currentDayStartBlock)
+
+        const lpRegisteryPromise = loadLPRegistery([new TokenPair(WETH, USDT), new TokenPair(WETH, USDC)], pastWeekIntervals);
+
+        const swapsPromise = loadSwaps(past24HoursTime, currentTime, numberOfSwapTransactionsToGet);
+
+        const poolVolumesPromise = loadPoolVolumes(past7Hours);
+
+        const impermanentLossPromise = loadImpermanentLoss(pastWeekIntervals);
+
+        const aggregatedSlippagesPromise = loadAggregatedSlippages(pastWeekIntervals);
+
+        const allTokenVolumesPromise = loadAllTokenVolumes(pastWeekIntervals);
+
+        const results = await Promise.all([
+            slippagePromise,
+            mevPromise,
+            lpRegisteryPromise,
+            swapsPromise,
+            poolVolumesPromise,
+            impermanentLossPromise,
+            aggregatedSlippagesPromise,
+            allTokenVolumesPromise,
+        ]);
+
         console.log("Loading End")
         loading = false;
         return
