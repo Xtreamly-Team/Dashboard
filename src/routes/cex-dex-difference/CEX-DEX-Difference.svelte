@@ -1,5 +1,8 @@
 <script lang="ts">
-    import { getSwapTransactions, startReceivingCeXonWebsocket } from "$lib/api";
+    import {
+        getSwapTransactions,
+        startReceivingCeXonWebsocket,
+    } from "$lib/api";
     import DataCard from "$lib/components/DataCard.svelte";
 
     import FactColumn from "$lib/components/dashboard/FactColumn.svelte";
@@ -10,18 +13,19 @@
 
     // TODO: Make dates contain seconds?
 
-    let chartReady = false
+    let chartReady = false;
 
-    let lastUpdatedCEXTimestamp = 0
-    let lastUpdatedDEXTimestamp = 0
+    let lastUpdatedCEXTimestamp = 0;
+    let lastUpdatedDEXTimestamp = 0;
 
-    let latestDEXPrice = 0
-    let latestCEXPrice = 0
+    let latestDEXPrice = 0;
+    let latestCEXPrice = 0;
 
-    $: differnecePercentage = latestDEXPrice ? Math.abs(((latestCEXPrice - latestDEXPrice) / latestDEXPrice)) * 100 : 0;
+    $: differnecePercentage = latestDEXPrice
+        ? Math.abs((latestCEXPrice - latestDEXPrice) / latestDEXPrice) * 100
+        : 0;
 
-    let DEXPriceData = []
-
+    let DEXPriceData = [];
 
     $: DexPriceSeries = {
         name: "DEX (Uniswap)",
@@ -38,24 +42,24 @@
     };
 
     // TODO: Maybe add annotations
-    $: DEXCEXSeries = [
-        DexPriceSeries, 
-        CEXPriceSeries
-    ];
+    $: DEXCEXSeries = [DexPriceSeries, CEXPriceSeries];
 
     onMount(async () => {
         await startReceivingCeXonWebsocket(async (trades) => {
-            const possibleNewTrade = trades.filter((trade) => trade.symbol === 'ETH-USDT' || trade.symbol === 'ETH-USDC')[0]
+            const possibleNewTrade = trades.filter(
+                (trade) =>
+                    trade.symbol === "ETH-USDT" || trade.symbol === "ETH-USDC",
+            )[0];
             if (possibleNewTrade.timestamp <= lastUpdatedCEXTimestamp) {
                 return;
             }
             const newTrade = possibleNewTrade;
             lastUpdatedCEXTimestamp = newTrade.timestamp;
-            latestCEXPrice = newTrade.price
+            latestCEXPrice = newTrade.price;
             const newPoint = {
                 // x: arbitaryDate.toDateString(),
                 x: lastUpdatedCEXTimestamp,
-                y: latestCEXPrice
+                y: latestCEXPrice,
             };
             CeXPriceData = [...CeXPriceData, newPoint];
 
@@ -64,38 +68,54 @@
                 getCurrentTime(),
                 10,
             );
-            const possibleNewDexTrade = swapTransactions.filter((trade) => trade.timestamp - lastUpdatedDEXTimestamp > 3 && StableCoins.includes(trade.tokenOutSymbol)).at(0)
+            const possibleNewDexTrade = swapTransactions
+                .filter(
+                    (trade) =>
+                        trade.timestamp - lastUpdatedDEXTimestamp > 3 &&
+                        StableCoins.includes(trade.tokenOutSymbol),
+                )
+                .at(0);
             if (possibleNewDexTrade) {
                 const newDexTrade = possibleNewDexTrade;
                 lastUpdatedDEXTimestamp = newDexTrade.timestamp;
-                latestDEXPrice = newDexTrade.quotedPrice
+                latestDEXPrice = newDexTrade.quotedPrice;
                 const newDEXPoint = {
                     x: lastUpdatedDEXTimestamp * 1000,
                     y: latestDEXPrice,
                 };
                 DEXPriceData = [...DEXPriceData, newDEXPoint];
-
             }
         });
-        chartReady = true
+        chartReady = true;
     });
 </script>
 
 <DataCard title="Aggregate Data">
     <div class="w-full flex flex-wrap lg:flex-nowrap">
-        <FactColumn title="DEX-CEX price difference" value="${differnecePercentage.toFixed(2)}%">
-            <FactColumnItem title="ETH (Uniswap)" value="$${latestDEXPrice.toFixed(1)}" />
-            <FactColumnItem title="ETH (Binance)" value="$${latestCEXPrice.toFixed(1)}" />
+        <FactColumn>
+            <FactColumnItem
+                title="DEX-CEX price difference"
+                value="${differnecePercentage.toFixed(2)}%"
+            />
+            <FactColumnItem
+                title="ETH (Uniswap)"
+                value="$${latestDEXPrice.toLocaleString()}"
+            />
+            <FactColumnItem
+                title="ETH (Binance)"
+                value="$${latestCEXPrice.toLocaleString()}"
+            />
         </FactColumn>
         <div class="w-8" />
         <div class="w-full p-8">
             <div class="flex flex-col">
                 {#if chartReady}
-                    <TemporalChart 
+                    <TemporalChart
                         title="ETH Price"
                         yaxisTitle="Price ($)"
                         xaxisTitle="Time"
-                        dataSeries={DEXCEXSeries} />
+                        dataSeries={DEXCEXSeries}
+                    />
                 {/if}
             </div>
         </div>

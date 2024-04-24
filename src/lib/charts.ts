@@ -202,7 +202,10 @@ export function lineChart(dataPoints: DataSeries = [],
     chartOptionsBuilder.setTitle({
         text: title,
         style: {
-            color: mainChartColors.labelColor
+            color: mainChartColors.labelColor,
+            fontSize: '18px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 700
         }
     })
 
@@ -378,7 +381,10 @@ export function multiYAxisLineChart(dataPoints: DataSeries = [],
     chartOptionsBuilder.setTitle({
         text: title,
         style: {
-            color: mainChartColors.labelColor
+            color: mainChartColors.labelColor,
+            fontSize: '18px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 700
         }
     })
 

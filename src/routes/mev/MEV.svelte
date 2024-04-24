@@ -8,55 +8,83 @@
     import { getContext } from "svelte";
     import type { Writable } from "svelte/store";
 
-    let mevTransactions = getContext<Writable<MEVTransactions>>("mevTransactions");
+    let mevTransactions =
+        getContext<Writable<MEVTransactions>>("mevTransactions");
 
-    $: numberOfDetectedMEVs = $mevTransactions.arbitrageTransactions.length + $mevTransactions.sandwichTransactions.length;
+    $: numberOfDetectedMEVs =
+        $mevTransactions.arbitrageTransactions.length +
+        $mevTransactions.sandwichTransactions.length;
 
     $: lastArbitrageBlockNumber =
-        $mevTransactions.arbitrageTransactions.length > 0 ? $mevTransactions.arbitrageTransactions[0].blockNumber : 0;
+        $mevTransactions.arbitrageTransactions.length > 0
+            ? $mevTransactions.arbitrageTransactions[0].blockNumber
+            : 0;
 
     $: firstArbitrageBlockNumber =
-        $mevTransactions.arbitrageTransactions.length > 0 ? $mevTransactions.arbitrageTransactions.at(-1)!.blockNumber : 0;
+        $mevTransactions.arbitrageTransactions.length > 0
+            ? $mevTransactions.arbitrageTransactions.at(-1)!.blockNumber
+            : 0;
 
     $: lastSandwichBlockNumber =
-        $mevTransactions.sandwichTransactions.length > 0 ? $mevTransactions.sandwichTransactions[0].blockNumber : 0;
+        $mevTransactions.sandwichTransactions.length > 0
+            ? $mevTransactions.sandwichTransactions[0].blockNumber
+            : 0;
 
     $: firstSandwichBlockNumber =
-        $mevTransactions.sandwichTransactions.length > 0 ? $mevTransactions.sandwichTransactions.at(-1)!.blockNumber : 0;
+        $mevTransactions.sandwichTransactions.length > 0
+            ? $mevTransactions.sandwichTransactions.at(-1)!.blockNumber
+            : 0;
 
-    $: arbitrageBlockRange = lastArbitrageBlockNumber - firstArbitrageBlockNumber;
+    $: arbitrageBlockRange =
+        lastArbitrageBlockNumber - firstArbitrageBlockNumber;
     $: sandwichBlockRange = lastSandwichBlockNumber - firstSandwichBlockNumber;
 
-    $: blockRange = Math.max(lastArbitrageBlockNumber, lastSandwichBlockNumber) - Math.min(firstArbitrageBlockNumber, firstSandwichBlockNumber);
+    $: blockRange =
+        Math.max(lastArbitrageBlockNumber, lastSandwichBlockNumber) -
+        Math.min(firstArbitrageBlockNumber, firstSandwichBlockNumber);
 
-    $: averageNumberOfMEVDetectedPerBlock = numberOfDetectedMEVs / blockRange || 1;
+    $: averageNumberOfMEVDetectedPerBlock =
+        numberOfDetectedMEVs / blockRange || 1;
 
-    $: averageNumberOfArbitrageDetectedPerBlock = $mevTransactions.arbitrageTransactions.length / arbitrageBlockRange || 1;
+    $: averageNumberOfArbitrageDetectedPerBlock =
+        $mevTransactions.arbitrageTransactions.length / arbitrageBlockRange ||
+        1;
 
-    $: averageNumberOfSandwichDetectedPerBlock = $mevTransactions.sandwichTransactions.length / sandwichBlockRange || 1;
+    $: averageNumberOfSandwichDetectedPerBlock =
+        $mevTransactions.sandwichTransactions.length / sandwichBlockRange || 1;
 
     // TODO: This is wrong since it doesn't take into account the different tokens being count as profit
-    $: totalProfit = $mevTransactions.arbitrageTransactions.reduce((acc, tx) => acc + tx.profit_amount, 0) + $mevTransactions.sandwichTransactions.reduce((acc, tx) => acc + tx.profit_amount, 0);
+    $: totalProfit =
+        $mevTransactions.arbitrageTransactions.reduce(
+            (acc, tx) => acc + tx.profit_amount,
+            0,
+        ) +
+        $mevTransactions.sandwichTransactions.reduce(
+            (acc, tx) => acc + tx.profit_amount,
+            0,
+        );
 
     // TODO: This is wrong since it doesn't take into account the different tokens being count as profit
     $: averageProfitPerMEV = totalProfit / numberOfDetectedMEVs;
-
 </script>
 
 <DataCard title="Aggregate Data">
     <div class="w-full flex flex-wrap lg:flex-nowrap">
-        
-        <FactColumn
-            title="Number of Detected MEVs (Last 24 Hours)"
-            value={numberOfDetectedMEVs.toFixed(0)}
-        >
-            <FactColumnItem title="Avergae Detected MEVs (Per block)" 
+        <FactColumn>
+            <FactColumnItem
+                title="Number of Detected MEVs (Last 24 Hours)"
+                value={numberOfDetectedMEVs.toLocaleString()}
+            />
+            <FactColumnItem
+                title="Average Detected MEVs (Per block)"
                 value={averageNumberOfMEVDetectedPerBlock.toFixed(2)}
             />
-            <FactColumnItem title="Avergae Arbitrages (Per block)" 
+            <FactColumnItem
+                title="Average Arbitrages (Per block)"
                 value={averageNumberOfArbitrageDetectedPerBlock.toFixed(2)}
             />
-            <FactColumnItem title="Avergae Sandwiches (Per block)" 
+            <FactColumnItem
+                title="Average Sandwiches (Per block)"
                 value={averageNumberOfSandwichDetectedPerBlock.toFixed(2)}
             />
             <!-- <FactColumnItem -->
@@ -73,5 +101,9 @@
     </div></DataCard
 >
 
-<MevArbitrageTransactionsTable arbitrageTransactions={$mevTransactions.arbitrageTransactions}/>
-<MevSandwichTransactionsTable sandwichTransactions={$mevTransactions.sandwichTransactions}/>
+<MevArbitrageTransactionsTable
+    arbitrageTransactions={$mevTransactions.arbitrageTransactions}
+/>
+<MevSandwichTransactionsTable
+    sandwichTransactions={$mevTransactions.sandwichTransactions}
+/>

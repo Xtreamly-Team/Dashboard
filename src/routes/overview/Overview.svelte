@@ -19,8 +19,8 @@
     import { getSupportedTokens } from "$lib/utils";
     import DataCard from "$lib/components/DataCard.svelte";
     import {
-    aggregateAverageATRVolatilityChartData,
-    aggregateAverageVarianceChartData,
+        aggregateAverageATRVolatilityChartData,
+        aggregateAverageVarianceChartData,
         aggregateAverageVolatilityChartData,
         aggregateVolumeChartData,
         applyRatio,
@@ -35,7 +35,7 @@
     import MultiYaxisTemporalChart from "$lib/components/dashboard/MultiYaxisTemporalChart.svelte";
 
     let swapTransactions =
- getContext<Writable<SwapTransaction[]>>("swapTransactions");
+        getContext<Writable<SwapTransaction[]>>("swapTransactions");
     let slippageCount = getContext<Writable<number[]>>("slippageCount");
     let aggregatedSlippages = getContext<Writable<AggregatedSlippageAmount[]>>(
         "aggregatedSlippages",
@@ -112,7 +112,7 @@
     // ];
 
     $: volatilitySeries = {
-        name: "Volatility-Std",
+        name: "Volatility Standard Deviation",
         type: "line",
         // color: "#EE6D7A",
         data: applyRatio(
@@ -150,7 +150,6 @@
         data: impermanentLossData,
     };
 
-
     // let slipapgeSeriesFillOptions = {
     //     type: ["gradient", "solid", "solid", "solid"],
     //     // type: 'gradient',
@@ -165,13 +164,13 @@
     //     },
     // };
     // const y_formatters={Array(5).fill((y) => y.toFixed(0))}
-    const y_formatters=[
-        y => 0.000001 * y.toFixed(0),
-        y => 0.001 * y.toFixed(0),
-        y => 0.001 * y.toFixed(0),
-        y => 0.000001 * y.toFixed(0),
-        y => y.toFixed(0),
-    ]
+    const y_formatters = [
+        (y) => 0.000001 * y.toFixed(0),
+        (y) => 0.001 * y.toFixed(0),
+        (y) => 0.001 * y.toFixed(0),
+        (y) => 0.000001 * y.toFixed(0),
+        (y) => y.toFixed(0),
+    ];
 
     $: overviewSeries = [
         tvlDataSeries,
@@ -184,11 +183,16 @@
         // impermanentLossSeries,
     ];
 
-    // // TODO: Maybe add annotations
-    // let overviewSeries: ApexAxisChartSeries | undefined = undefined;
-
     let overviewFillOptions = {
-        type: ["gradient", "solid", "solid", "solid", "solid", "solid", "solid"],
+        type: [
+            "gradient",
+            "solid",
+            "solid",
+            "solid",
+            "solid",
+            "solid",
+            "solid",
+        ],
         // type: 'gradient',
         gradient: {
             shadeIntensity: 0.5,
@@ -202,63 +206,68 @@
     };
 
     onMount(async () => {
-        const [WETH, USDT, USDC, DAI] = getSupportedTokens();
     });
 </script>
 
-<DataCard title="Aggregate Data">
+<DataCard>
     <div class="w-full flex flex-wrap lg:flex-nowrap">
-        <FactColumn
-            title="Number of swaps (Last 24 hours)"
-            value={last24HoursCount.toFixed(0)}
-        >
+        <FactColumn>
+            <FactColumnItem
+                title="Number of swaps (Last 24 hours)"
+                value={last24HoursCount.toLocaleString()}
+            />
             <FactColumnItem
                 title="TVL (Last 24 hours)"
-                value={`$${last24HoursTVL.toFixed(0)}M`}
+                value={`$${last24HoursTVL.toLocaleString()}M`}
             />
             <FactColumnItem
                 title="Total Volume (Last 24 hours)"
-                value={`$${last24HoursVolume?.toFixed(0)}M`}
+                value={`$${last24HoursVolume?.toLocaleString()}M`}
             />
             <FactColumnItem
                 title="Average Volatility (Last 24 hours)"
-                value={`${last24HoursVolatility?.toFixed(2)}`}
+                value={`${last24HoursVolatility?.toLocaleString()}`}
             />
             <FactColumnItem
                 title="Total Positive Slippage (Last 24 hours)"
-                value={`$${last24HoursPositiveSlippage?.toFixed(0)}K`}
+                value={`$${last24HoursPositiveSlippage?.toLocaleString()}K`}
             />
             <FactColumnItem
                 title="Total Negative Slippage (Last 24 hours)"
-                value={`$${last24HoursNegativeSlippage?.toFixed(0)}K`}
+                value={`$${last24HoursNegativeSlippage?.toLocaleString()}K`}
             />
         </FactColumn>
     </div>
-        <div class="w-8" />
-        <div class="w-full p-8">
-            <div class="flex flex-col">
-                {#if overviewSeries != undefined}
-                    <MultiYaxisTemporalChart
-                        dataSeries={overviewSeries}
-                        fillOptions={overviewFillOptions}
-                        title="Overview"
-                        xaxisTitle="Date"
-                        yaxisTitles={["TVL (M$)", "Positive SP (K$)", "Negative SP (K$)", "Volume (M$)", "Volatility"]}
-                        y_formatters={y_formatters}
-                    />
-                {/if}
-                {#if priceImpactSeries[0].data.length > 0}
-                    <XyChart
-                        dataSeries={priceImpactSeries}
-                        title="Price Impact"
-                        xaxisTitle="Amount In"
-                        yaxisTitle="Price Impact (%)"
-                        y_formatter={(y) => y.toFixed(2)}
-                    />
-                {/if}
-            </div>
+    <div class="w-8" />
+    <div class="w-full p-8">
+        <div class="flex flex-col">
+            {#if overviewSeries != undefined}
+                <MultiYaxisTemporalChart
+                    dataSeries={overviewSeries}
+                    fillOptions={overviewFillOptions}
+                    title="Overview"
+                    xaxisTitle="Date"
+                    yaxisTitles={[
+                        "TVL (M$)",
+                        "Positive SP (K$)",
+                        "Negative SP (K$)",
+                        "Volume (M$)",
+                        "Volatility",
+                    ]}
+                    {y_formatters}
+                />
+            {/if}
+            {#if priceImpactSeries[0].data.length > 0}
+                <XyChart
+                    dataSeries={priceImpactSeries}
+                    title="Price Impact"
+                    xaxisTitle="Amount In"
+                    yaxisTitle="Price Impact (%)"
+                    y_formatter={(y) => y.toFixed(2)}
+                />
+            {/if}
         </div>
+    </div>
 </DataCard>
-
 
 <SwapTransactionsTable swapTransactions={$swapTransactions} />

@@ -36,7 +36,7 @@
 
 	let nonActiveClass =
 		childClass +
-		' hover:text-gray-500 hover:cursor-pointer dark:text-gray-400 dark:hover:text-white';
+		'hover:text-gray-500 hover:cursor-pointer dark:text-gray-400 dark:hover:text-white';
 	let activeClass = childClass + ' cursor-default dark:text-primary-700';
 
 	$: mainSidebarUrl = $page.url.pathname;
@@ -119,7 +119,8 @@
 >
 	<h4 class="sr-only">Main menu</h4>
 	<SidebarWrapper
-		divClass="overflow-y-auto px-3 pt-20 lg:pt-7 h-full bg-white scrolling-touch max-w-2xs lg:h-[calc(100vh-4rem)] lg:block dark:bg-gray-800 lg:me-0 lg:sticky top-2"
+		divClass=" overflow-y-auto px-3 pt-20 lg:pt-7 h-full bg-white scrolling-touch max-w-2xs lg:h-[calc(100vh-4rem)] lg:block dark:bg-gray-800 lg:me-0 lg:sticky top-2
+        bg-xtreamly-green"
 	>
 		<nav class="divide-y text-base font-medium">
 			<SidebarGroup ulClass="list-unstyled fw-normal small mb-4 space-y-2">

@@ -4,6 +4,6 @@
 </script>
 
 <div class="flex flex-row justify-between">
-    <div class="font-light">{title}</div>
-    <div class="font-semibold">{value}</div>
+    <div class="font-normal">{title}</div>
+    <div class="font-extrabold">{value}</div>
 </div>

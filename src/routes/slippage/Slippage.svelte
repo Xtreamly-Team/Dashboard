@@ -97,31 +97,32 @@
 
 <DataCard title="Slippage">
     <div class="w-full flex flex-wrap lg:flex-nowrap">
-        <FactColumn
+        <FactColumn>
+            <FactColumnItem
             title="Today total loss due to slippage"
-            value={`$${last24HoursNegativeSlippage.toFixed(0)}K`}
-        >
+            value={`$${last24HoursNegativeSlippage.toLocaleString()}K`}
+            />
             <FactColumnItem
                 title="Total Positive Slippage (Last 24 hours)"
-                value={`$${last24HoursPositiveSlippage?.toFixed(0)}K`}
+                value={`$${last24HoursPositiveSlippage?.toLocaleString()}K`}
             />
             <FactColumnItem
                 title="Total Negative Slippage (Last 24 hours)"
-                value={`$${last24HoursNegativeSlippage?.toFixed(0)}K`}
+                value={`$${last24HoursNegativeSlippage?.toLocaleString()}K`}
             />
             <FactColumnItem
                 title="Percentage of transactions with negative slippage"
                 value={`$${(
                     (todayTrasnactionsWithNegativeSlipapge.length * 100) /
                     numberOfTodayTransactions
-                )?.toFixed(2)}%`}
+                )?.toFixed(1)}%`}
             />
             <FactColumnItem
                 title="Percentage of transactions with positive slippage"
                 value={`$${(
                     (todayTransactionsWithPositiveSlippage.length * 100) /
                     numberOfTodayTransactions
-                )?.toFixed(2)}%`}
+                )?.toFixed(1)}%`}
             />
         </FactColumn>
         <div class="w-8" />

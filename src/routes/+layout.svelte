@@ -184,15 +184,18 @@
 
         const allTokenVolumesPromise = loadAllTokenVolumes(pastWeekIntervals);
 
+        const volatilitiesPromise = loadVolatility(pastWeekIntervals);
+
         const results = await Promise.all([
             slippagePromise,
             mevPromise,
             lpRegisteryPromise,
             swapsPromise,
             poolVolumesPromise,
-            impermanentLossPromise,
             aggregatedSlippagesPromise,
             allTokenVolumesPromise,
+            impermanentLossPromise,
+            volatilitiesPromise,
         ]);
 
         console.log("Loading End")
